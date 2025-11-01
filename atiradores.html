@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Bairro: Atiradores</title>
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin="">
+
+  <style>
+    html, body {margin:0;height:100%;background:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#0f172a;}
+    #map {position:absolute;inset:0;width:100%;height:100%;background:#fff;}
+    .topbar{position:absolute;z-index:1100;left:10px;top:10px;background:rgba(255,255,255,.95);padding:8px 10px;border-radius:10px;
+      box-shadow:0 12px 32px rgba(0,0,0,.15);border:1px solid rgba(0,0,0,0.07);font-size:13px;font-weight:600;color:#0f172a;display:flex;gap:8px;flex-wrap:wrap;}
+    .btn{padding:6px 10px;background:#fff;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .bairroNome{font-weight:700;color:#0f172a;}
+    .info-panel{position:absolute;z-index:1200;right:10px;top:70px;max-width:300px;width:300px;background:rgba(255,255,255,0.98);
+      border:1px solid rgba(0,0,0,0.15);border-radius:12px;box-shadow:0 20px 48px rgba(0,0,0,.25);padding:16px 18px;font-size:13px;line-height:1.5;color:#1e293b;}
+    .info-title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:10px;line-height:1.4;}
+    .info-label{font-size:12px;font-weight:600;color:#111827;margin-bottom:3px;}
+    .info-value{font-size:13px;color:#374151;line-height:1.5;margin-bottom:8px;}
+    .badge-acess{font-size:12px;font-weight:600;color:#065f46;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:4px 8px;display:inline-block;}
+    .info-hint{font-size:12px;color:#6b7280;line-height:1.4;font-style:italic;}
+    @media(max-width:480px){.info-panel{width:calc(100% - 20px);right:10px;left:10px;top:auto;bottom:10px;max-width:none;}}
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="Mapa do bairro Atiradores"></div>
+  <div class="topbar">
+    <div class="bairroNome">Bairro: Atiradores</div>
+    <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
+    <button class="btn" id="resetViewBtn">Resetar visão</button>
+  </div>
+
+  <div class="info-panel" id="infoPanel">
+    <div class="info-title">Passe o mouse sobre um ponto</div>
+    <div class="info-hint">Veja os detalhes do serviço.</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const BAIRROS_URL="https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
+    const NOME_BAIRRO_ALVO="atiradores";
+
+    const servicesBairro=[
+      {
+        tipo:"Saúde",
+        nomeServico:"Centrinho",
+        endereco:"Rua Borba Gato, 685",
+        telefone:"(47) 3419-9450",
+        horario:"Seg-Sex: 07h às 19h",
+        responsavel:"Andrea Vargas",
+        observacoes:"Atendimento de pacientes com deficiência auditiva e fissuras lábio-palatais.",
+        acessibilidade:"Sim",
+        lat:-26.3099056,
+        lng:-48.8650015
+      },
+      {
+        tipo:"Assistência Social",
+        nomeServico:"PROFIS Joinville",
+        endereco:"Rua Euzébio de Queirós, 944",
+        telefone:"(47) 3433-3145",
+        horario:"Seg-Sex: 09h às 18h",
+        responsavel:"Jacirema Campos Bentes",
+        observacoes:"Promove assistência social aos fissurados, deficientes auditivos e familiares, oferecendo suporte emocional, social e estrutural.",
+        acessibilidade:"Sim",
+         lat:-26.3104319,
+        lng:-48.8644989
+      }
+    ];
+
+    function escapeHTML(str){return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+    function normalizeName(str){return String(str||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();}
+    function renderInfoPanel(svc){
+      const p=document.getElementById("infoPanel");
+      p.innerHTML=`<div class="info-title">${escapeHTML(svc.nomeServico)}</div>
+        <div class="info-label">Tipo de Serviço</div><div class="info-value">${escapeHTML(svc.tipo)}</div>
+        <div class="info-label">Endereço</div><div class="info-value">${escapeHTML(svc.endereco)}</div>
+        <div class="info-label">Telefone</div><div class="info-value">${escapeHTML(svc.telefone)}</div>
+        <div class="info-label">Horário de Atendimento</div><div class="info-value">${escapeHTML(svc.horario)}</div>
+        ${svc.responsavel?`<div class="info-label">Responsável</div><div class="info-value">${escapeHTML(svc.responsavel)}</div>`:""}
+        <div class="info-label">Descrição / Observações</div><div class="info-value">${escapeHTML(svc.observacoes)}</div>
+        <div class="badge-acess">Acessibilidade: ${escapeHTML(svc.acessibilidade)}</div>`;
+    }
+    function resetInfoPanel(){
+      document.getElementById("infoPanel").innerHTML='<div class="info-title">Passe o mouse sobre um ponto</div><div class="info-hint">Veja os detalhes do serviço.</div>';
+    }
+
+    document.addEventListener("DOMContentLoaded",()=>{
+      const map=L.map("map");let combinedBounds=null;
+      fetch(BAIRROS_URL).then(r=>r.json()).then(gj=>{
+        const onlyThis={type:"FeatureCollection",features:(gj.features||[]).filter(f=>{
+          const props=f.properties||{};const name=props.nome_bairr||props.NOME||props.name||"";return normalizeName(name).startsWith(NOME_BAIRRO_ALVO);
+        })};
+        if(!onlyThis.features.length){alert("Bairro não encontrado no mapa oficial.");return;}
+        const bairro=L.geoJSON(onlyThis,{style:{color:"#1e293b",weight:3,fillColor:"#60a5fa",fillOpacity:.25}}).addTo(map);
+        combinedBounds=bairro.getBounds();
+
+        const pinIcon=L.icon({iconUrl:'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+        <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z" fill="#2563eb"/>
+        <circle cx="16" cy="12" r="4.5" fill="white"/></svg>`),iconSize:[32,32],iconAnchor:[16,32]});
+
+        servicesBairro.forEach(s=>{
+          const m=L.marker([s.lat,s.lng],{icon:pinIcon}).addTo(map);
+          m.on("mouseover",()=>renderInfoPanel(s));m.on("mouseout",resetInfoPanel);
+          combinedBounds.extend([s.lat,s.lng]);
+        });
+
+        map.fitBounds(combinedBounds,{padding:[30,30]});
+        document.getElementById("resetViewBtn").addEventListener("click",()=>{if(combinedBounds&&combinedBounds.isValid())map.fitBounds(combinedBounds,{padding:[30,30]});});
+      }).catch(e=>{console.error("Erro carregando bairro:",e);alert("Erro ao carregar dados do bairro.");});
+    });
+  </script>
+</body>
+</html>

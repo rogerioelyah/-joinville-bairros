@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Bairro: Glória</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
+  <style>
+    html, body {
+      margin:0;
+      height:100%;
+      background:#fff;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      color:#0f172a;
+    }
+
+    #map {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      background:#fff;
+    }
+
+    .topbar {
+      position:absolute;
+      z-index:1100;
+      left:10px;
+      top:10px;
+      background:rgba(255,255,255,.95);
+      padding:8px 10px;
+      border-radius:10px;
+      box-shadow:0 12px 32px rgba(0,0,0,.15);
+      border:1px solid rgba(0,0,0,0.07);
+      font-size:13px;
+      font-weight:600;
+      color:#0f172a;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .btn {
+      padding:6px 10px;
+      background:#fff;
+      border:1px solid #ccc;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:500;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .bairroNome {
+      font-weight:700;
+      color:#0f172a;
+    }
+
+    .info-panel {
+      position:absolute;
+      z-index:1200;
+      right:10px;
+      top:70px;
+      max-width:300px;
+      width:300px;
+      background:rgba(255,255,255,0.98);
+      border:1px solid rgba(0,0,0,0.15);
+      border-radius:12px;
+      box-shadow:0 20px 48px rgba(0,0,0,.25);
+      padding:16px 18px;
+      font-size:13px;
+      line-height:1.5;
+      color:#1e293b;
+    }
+
+    .info-title {
+      font-size:15px;
+      font-weight:700;
+      color:#0f172a;
+      margin-bottom:10px;
+      line-height:1.4;
+      word-break:break-word;
+    }
+
+    .info-label {
+      font-size:12px;
+      font-weight:600;
+      color:#111827;
+      margin-bottom:3px;
+      line-height:1.4;
+    }
+
+    .info-value {
+      font-size:13px;
+      color:#374151;
+      line-height:1.5;
+      margin-bottom:8px;
+      word-break:break-word;
+    }
+
+    .badge-acess {
+      font-size:12px;
+      font-weight:600;
+      color:#065f46;
+      background:#ecfdf5;
+      border:1px solid #6ee7b7;
+      border-radius:8px;
+      padding:4px 8px;
+      display:inline-block;
+      white-space:nowrap;
+    }
+
+    .info-hint {
+      font-size:12px;
+      color:#6b7280;
+      line-height:1.4;
+      font-style:italic;
+    }
+
+    @media(max-width:480px){
+      .info-panel{
+        width:calc(100% - 20px);
+        right:10px;
+        left:10px;
+        top:auto;
+        bottom:10px;
+        max-width:none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- mapa -->
+  <div id="map" aria-label="Mapa do bairro Glória"></div>
+
+  <!-- barra superior -->
+  <div class="topbar">
+    <div class="bairroNome">Bairro: Glória</div>
+    <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
+    <button class="btn" id="resetViewBtn">Resetar visão</button>
+  </div>
+
+  <!-- painel lateral dinâmico -->
+  <div class="info-panel" id="infoPanel">
+    <div class="info-title">Passe o mouse sobre um ponto</div>
+    <div class="info-hint">Veja os detalhes do serviço.</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    // ========= 1. Fonte oficial (polígono do bairro) =========
+    const BAIRROS_URL =
+      "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
+
+    // Nome alvo (sem acento)
+    const NOME_BAIRRO_ALVO = "gloria";
+
+    // ========= 2. Serviços do Glória =========
+    // IMPORTANTE:
+    // Preencha lat / lng de cada serviço quando você tiver:
+    // lat: -26.xxxxx  lng: -48.xxxxx
+    //
+    // Depois de atualizar, salva e pronto.
+    const servicesBairro = [
+      {
+        tipo: "Saúde",
+        nomeServico: "UBS Glória",
+        endereco: "R. Brigada Lopes, s/nº",
+        telefone: "(47) 3416-3074",
+        horario: "Seg-Sex: 08h às 17h",
+        responsavel: "Ariane Marlene Correa Berndt",
+        observacoes:
+          "Ações de saúde, no âmbito individual e coletivo, segundo os princípios da Política Nacional de Atenção Primária.",
+        acessibilidade: "Sim",
+        lat: -26.2937333,  // TODO: substituir pela latitude real
+        lng: -48.876823  // TODO: substituir pela longitude real
+      },
+      {
+        tipo: "Social",
+        nomeServico: "COMDE - Conselho Municipal dos Direitos da Pessoa com Deficiência",
+        endereco: "Rua Brigada Lopes, 153",
+        telefone: "(47) 9 8847-8948",
+        horario: "Seg-Sex: 08h às 14h",
+        responsavel: "Átila Rohleder Junior",
+        observacoes:
+          "Funções deliberativas, consultivas e fiscalizadoras da execução da política municipal de inclusão social das pessoas com deficiência no Município.",
+        acessibilidade: "Sim",
+        lat: -26.2945254,  // TODO: substituir
+        lng: -48.8766909   // TODO: substituir
+      },
+      {
+        tipo: "Social / Saúde",
+        nomeServico: "APISCAE - Associação para a Integração de Crianças e Adultos Especiais",
+        endereco: "Rua Carlos Stiel, 454",
+        telefone: "(47) 3422-9525",
+        horario: "",
+        responsavel: "",
+        observacoes:
+          "Centro de atendimento especializado para pessoas com deficiência intelectual.",
+        acessibilidade: "Sim",
+        lat: -26.3037034,  // TODO: substituir
+        lng: -48.8823364   // TODO: substituir
+      },
+      {
+        tipo: "Saúde",
+        nomeServico: "Hospital de Olhos Sadalla Amin Ghanem",
+        endereco: "Rua Camboriú, 35",
+        telefone: "(47) 3481-5333",
+        horario: "Seg-Sex: 07:30h às 19h",
+        responsavel: "Dr. Jonathan Lake",
+        observacoes: "Saúde ocular.",
+        acessibilidade: "Sim",
+        lat: -26.3063338,  // TODO: substituir
+        lng: -48.8659838   // TODO: substituir
+      },
+      {
+        tipo: "Cultura",
+        nomeServico: "IMPAR - Instituto de Pesquisa da Arte pelo Movimento",
+        endereco: "R. XV de Novembro, 4.315",
+        telefone: "(47) 99672-0034",
+        horario: "",
+        responsavel: "Manoella Rego",
+        observacoes:
+          "Associação cultural que reúne artistas locais de diferentes áreas para captar recursos e fortalecer produções.",
+        acessibilidade: "Sim",
+        lat: -26.2945026,  // TODO: substituir
+        lng: -48.8924289   // TODO: substituir
+      }
+    ];
+
+    // ========= 3. Helpers =========
+    function escapeHTML(str){
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function normalizeName(str){
+      return String(str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .toLowerCase()
+        .trim();
+    }
+
+    function renderInfoPanel(svc){
+      const panel = document.getElementById('infoPanel');
+      panel.innerHTML = `
+        <div class="info-title">${escapeHTML(svc.nomeServico)}</div>
+
+        <div class="info-label">Tipo de Serviço</div>
+        <div class="info-value">${escapeHTML(svc.tipo)}</div>
+
+        <div class="info-label">Endereço</div>
+        <div class="info-value">${escapeHTML(svc.endereco)}</div>
+
+        ${svc.telefone ? `
+          <div class="info-label">Telefone</div>
+          <div class="info-value">${escapeHTML(svc.telefone)}</div>
+        ` : ""}
+
+        ${svc.horario ? `
+          <div class="info-label">Horário de Atendimento</div>
+          <div class="info-value">${escapeHTML(svc.horario)}</div>
+        ` : ""}
+
+        ${svc.responsavel ? `
+          <div class="info-label">Responsável</div>
+          <div class="info-value">${escapeHTML(svc.responsavel)}</div>
+        ` : ""}
+
+        <div class="info-label">Descrição / Observações</div>
+        <div class="info-value">${escapeHTML(svc.observacoes)}</div>
+
+        <div class="badge-acess">Acessibilidade: ${escapeHTML(svc.acessibilidade)}</div>
+      `;
+    }
+
+    function resetInfoPanel(){
+      const panel = document.getElementById('infoPanel');
+      panel.innerHTML = `
+        <div class="info-title">Passe o mouse sobre um ponto</div>
+        <div class="info-hint">Veja os detalhes do serviço.</div>
+      `;
+    }
+
+    // ========= 4. Mapa =========
+    document.addEventListener('DOMContentLoaded', () => {
+      const map = L.map('map');
+      let combinedBounds = null;
+
+      fetch(BAIRROS_URL)
+        .then(r => r.json())
+        .then(gj => {
+          // pega só o bairro Glória
+          const onlyThisBairro = {
+            type: "FeatureCollection",
+            features: (gj.features || []).filter(f => {
+              const props = f.properties || {};
+              const rawName = props.nome_bairr || props.NOME || props.name || "";
+              const norm = normalizeName(rawName);
+              return norm.startsWith(NOME_BAIRRO_ALVO);
+            })
+          };
+
+          if (!onlyThisBairro.features.length){
+            alert("Bairro não encontrado no mapa oficial.");
+            console.warn("Nenhuma feature encontrada para", NOME_BAIRRO_ALVO, onlyThisBairro);
+            return;
+          }
+
+          // pinta o polígono do Glória
+          const bairroLayer = L.geoJSON(onlyThisBairro, {
+            style: {
+              color: "#1e293b",
+              weight: 3,
+              fillColor: "#60a5fa",
+              fillOpacity: 0.25
+            }
+          }).addTo(map);
+
+          // começa o bounds com o bairro
+          combinedBounds = bairroLayer.getBounds();
+
+          // ícone azul padrão
+          const pinIcon = L.icon({
+            iconUrl:
+              'data:image/svg+xml;utf8,' +
+              encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+                  <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z" fill="#2563eb"/>
+                  <circle cx="16" cy="12" r="4.5" fill="white"/>
+                </svg>
+              `),
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+          });
+
+          // adiciona todos os serviços como pins
+          servicesBairro.forEach(svc => {
+            // se você ainda não atualizou as coords, esse ponto pode cair no [0,0] da cidade
+            const ll = L.latLng(svc.lat, svc.lng);
+            const marker = L.marker(ll, { icon: pinIcon }).addTo(map);
+
+            // hover mostra info no painel
+            marker.on('mouseover', () => renderInfoPanel(svc));
+            marker.on('mouseout', resetInfoPanel);
+
+            // extende a área visível pra incluir esse ponto
+            combinedBounds.extend(ll);
+          });
+
+          // enquadra o bairro + serviços
+          map.fitBounds(combinedBounds, { padding:[30,30] });
+
+          // botão "resetar visão"
+          document.getElementById('resetViewBtn').addEventListener('click', () => {
+            if (combinedBounds && combinedBounds.isValid()) {
+              map.fitBounds(combinedBounds, { padding:[30,30] });
+            }
+          });
+        })
+        .catch(err => {
+          console.error("Erro carregando bairro:", err);
+          alert("Erro ao carregar dados do bairro.");
+        });
+    });
+  </script>
+</body>
+</html>
