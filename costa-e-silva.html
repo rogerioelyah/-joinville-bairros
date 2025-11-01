@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Bairro: Nova Brasília</title>
+  <title>Bairro: Costa e Silva</title>
 
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -26,7 +26,7 @@
       background: #fff;
     }
 
-    /* barra superior */
+    /* Barra superior (bairro + voltar + resetar) */
     .topbar {
       position: absolute;
       z-index: 1100;
@@ -61,7 +61,7 @@
       color:#0f172a;
     }
 
-    /* painel lateral info */
+    /* Painel lateral de informações do serviço */
     .info-panel {
       position: absolute;
       z-index: 1200;
@@ -125,7 +125,7 @@
       font-style:italic;
     }
 
-    /* legenda fixa */
+    /* Legenda fixa no canto inferior esquerdo */
     .legend {
       position: absolute;
       z-index: 1300;
@@ -168,6 +168,7 @@
       flex-shrink: 0;
     }
 
+    /* Responsivo: painel desce no mobile e legenda sobe um pouco */
     @media(max-width: 480px){
       .info-panel {
         width: calc(100% - 20px);
@@ -187,23 +188,23 @@
 </head>
 <body>
 
-  <!-- mapa -->
-  <div id="map" aria-label="Mapa do bairro Nova Brasília"></div>
+  <!-- Mapa -->
+  <div id="map" aria-label="Mapa do bairro Costa e Silva"></div>
 
-  <!-- barra superior -->
+  <!-- Barra superior -->
   <div class="topbar">
-    <div class="bairroNome">Bairro: Nova Brasília</div>
+    <div class="bairroNome">Bairro: Costa e Silva</div>
     <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
     <button class="btn" id="resetViewBtn">Resetar visão</button>
   </div>
 
-  <!-- painel lateral dinâmico -->
+  <!-- Painel lateral dinâmico -->
   <div class="info-panel" id="infoPanel">
     <div class="info-title">Passe o mouse sobre um ponto</div>
     <div class="info-hint">Veja os detalhes do serviço.</div>
   </div>
 
-  <!-- legenda fixa -->
+  <!-- Legenda dos tipos de serviço -->
   <div class="legend" id="legendBox">
     <div class="legend-title">Tipos de serviço</div>
 
@@ -236,14 +237,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
   <script>
-    // ============================
-    // 1. Fonte dos polígonos de bairros
-    // ============================
+    // URL dos bairros (GeoJSON oficial)
     const BAIRROS_URL =
       "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
-
-    // nome alvo (normalizado sem acento)
-    const NOME_BAIRRO_ALVO = "nova brasilia";
 
     // Paleta de cores por categoria
     const SERVICE_COLORS = {
@@ -254,28 +250,121 @@
       "outros":           "#6b7280"  // cinza
     };
 
-    // ============================
-    // 2. Serviços do bairro Nova Brasília
-    // ============================
+    // Serviços do bairro Costa e Silva
+    // categoria controla a cor do pin
+    // lat/lng = null por enquanto (vamos preencher depois)
     const servicesBairro = [
       {
         categoria: "saude",
         tipo: "Saúde / UBSF",
-        nomeServico: "UBSF Nova Brasília",
-        endereco: "R. Bom Retiro, 152",
-        telefone: "(47) 3454-9216",
+        nomeServico: "UBSF Costa e Silva",
+        endereco: "R. Cmte. Telles de Mendonça, 65",
+        telefone: "(47) 3437-1760",
+        horario: "Seg-Sex: 07h às 19h",
+        responsavel: "",
+        observacoes: "Caracteriza-se por ações de saúde, no âmbito individual e coletivo, segundo os princípios da Política Nacional de Atenção Primária.",
+        acessibilidade: "Sim",
+        lat: -26.2740013,
+        lng: -48.8770835
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
+        nomeServico: "UBSF Parque Douat",
+        endereco: "R. Inambu, 4003",
+        telefone: "(47) 3437-5513",
         horario: "Seg-Sex: 07h às 17h",
         responsavel: "",
-        observacoes: "Unidade básica com atendimento odontológico e vacinação.",
+        observacoes: "Caracteriza-se por ações de saúde, no âmbito individual e coletivo, segundo os princípios da Política Nacional de Atenção Primária.",
         acessibilidade: "Sim",
-        lat: -26.3313387,
-        lng: -48.8702781
+        lat: -26.2692228,
+        lng: -48.8931519
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
+        nomeServico: "UBSF Willy Schossland",
+        endereco: "Rua Vereador Curt Alvino Monich, s/nº",
+        telefone: "(47) 3418-0407",
+        horario: "Seg-Sex: 08h às 17h",
+        responsavel: "",
+        observacoes: "Caracteriza-se por ações de saúde, no âmbito individual e coletivo, segundo os princípios da Política Nacional de Atenção Primária.",
+        acessibilidade: "Sim",
+        lat: -26.2820568,
+        lng: -48.884764
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UPA / PA",
+        nomeServico: "PA Norte",
+        endereco: "R. Guilherme, 640",
+        telefone: "(47) 3419-9150",
+        horario: "24 horas",
+        responsavel: "",
+        observacoes: "Atendimento a usuários em situações de urgência e emergência.",
+        acessibilidade: "Sim",
+        lat: -26.2787727,
+        lng: -48.8680558
+      },
+      {
+        categoria: "assistencia",
+        tipo: "Assistência Social",
+        nomeServico: "Associação Casa do Adalto",
+        endereco: "R. Inambu, n° 3.290",
+        telefone: "(47) 3438-1629",
+        horario: "Seg-Sex: 08h às 18h",
+        responsavel: "",
+        observacoes: "Presta assistência social beneficente, focando a estrutura familiar da criança e/ou adolescente em fase de tratamento de saúde (oncologia, cardiologia, lábio palatal e outros).",
+        acessibilidade: "Sim",
+        lat: -26.272338,
+        lng: -48.8882881
+      },
+      {
+        categoria: "assistencia",
+        tipo: "Assistência Social / Centro Comunitário",
+        nomeServico: "Centro Comunitário Costa e Silva",
+        endereco: "R. Sanhaçu, 225",
+        telefone: "(47) 3418-0293",
+        horario: "Seg-Sex: 09h às 17h",
+        responsavel: "",
+        observacoes: "Atendimento social à comunidade. Oferece aulas de Karatê, Ginástica, Ballet Infantil, Pilates, Zumba, Funcional, HIP HOP, cursos de Música, Manicure, Depilação, Informática, Inglês e outros.",
+        acessibilidade: "Sim",
+        lat: -26.2712916,
+        lng: -48.880442
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
+        nomeServico: "UBSF Rio da Prata",
+        endereco: "Estr. Rio da Prata, s/n",
+        telefone: "(47) 3428-0108",
+        horario: "Seg-Sex: 08h às 17h",
+        responsavel: "",
+        observacoes: "Caracteriza-se por ações de saúde, no âmbito individual e coletivo, segundo os princípios da Política Nacional de Atenção Primária.",
+        acessibilidade: "Sim",
+        lat: -26.1733772,
+        lng: -49.0467368
       }
     ];
 
-    // ============================
-    // 3. Utilitários
-    // ============================
+    // Normaliza nome pra bater bairro no GeoJSON
+    function normalizeName(str){
+      return String(str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .toLowerCase()
+        .trim();
+    }
+
+    // Checa se uma feature é "Costa e Silva"
+    // cobrindo variações tipo "Costa e Silva", "Costa E Silva"
+    function isCostaESilva(raw){
+      const n = normalizeName(raw);
+      // aceita tanto "costa" quanto "silva" no nome
+      return n.includes("costa") && n.includes("silva");
+    }
+
+    // Proteger HTML antes de colocar no painel
     function escapeHTML(str){
       return String(str)
         .replace(/&/g,'&amp;')
@@ -285,138 +374,124 @@
         .replace(/'/g,'&#39;');
     }
 
-    function normalizeName(str){
-      return String(str || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .toLowerCase()
-        .trim();
-    }
-
-    function renderInfoPanel(svc){
+    // Atualiza info-panel com dados do serviço
+    function renderInfoPanel(s){
       const panel = document.getElementById('infoPanel');
       panel.innerHTML = `
-        <div class="info-title">${escapeHTML(svc.nomeServico)}</div>
+        <div class="info-title">${escapeHTML(s.nomeServico)}</div>
 
         <div class="info-label">Tipo de Serviço</div>
-        <div class="info-value">${escapeHTML(svc.tipo)}</div>
+        <div class="info-value">${escapeHTML(s.tipo)}</div>
 
         <div class="info-label">Endereço</div>
-        <div class="info-value">${escapeHTML(svc.endereco)}</div>
+        <div class="info-value">${escapeHTML(s.endereco)}</div>
 
         <div class="info-label">Telefone</div>
-        <div class="info-value">${escapeHTML(svc.telefone)}</div>
+        <div class="info-value">${escapeHTML(s.telefone)}</div>
 
         <div class="info-label">Horário de Atendimento</div>
-        <div class="info-value">${escapeHTML(svc.horario)}</div>
+        <div class="info-value">${escapeHTML(s.horario)}</div>
 
-        ${svc.responsavel ? `
+        ${s.responsavel ? `
           <div class="info-label">Responsável</div>
-          <div class="info-value">${escapeHTML(svc.responsavel)}</div>
+          <div class="info-value">${escapeHTML(s.responsavel)}</div>
         ` : ""}
 
         <div class="info-label">Descrição / Observações</div>
-        <div class="info-value">${escapeHTML(svc.observacoes)}</div>
+        <div class="info-value">${escapeHTML(s.observacoes)}</div>
 
-        <div class="badge-acess">Acessibilidade: ${escapeHTML(svc.acessibilidade)}</div>
+        <div class="badge-acess">Acessibilidade: ${escapeHTML(s.acessibilidade)}</div>
       `;
     }
 
+    // Volta info-panel pro estado padrão
     function resetInfoPanel(){
-      const panel = document.getElementById('infoPanel');
-      panel.innerHTML = `
+      document.getElementById('infoPanel').innerHTML = `
         <div class="info-title">Passe o mouse sobre um ponto</div>
         <div class="info-hint">Veja os detalhes do serviço.</div>
       `;
     }
 
-    // Cria um pino colorido por categoria
+    // Gera um marcador SVG colorido de acordo com a categoria
     function makePinIcon(colorHex){
       return L.icon({
-        iconUrl:
-          'data:image/svg+xml;utf8,' +
-          encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
-                fill="${colorHex}"/>
-              <circle cx="16" cy="12" r="4.5" fill="white"/>
-            </svg>
-          `),
+        iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+            <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
+              fill="${colorHex}"/>
+            <circle cx="16" cy="12" r="4.5" fill="white"/>
+          </svg>
+        `),
         iconSize: [32, 32],
         iconAnchor: [16, 32]
       });
     }
 
-    // ============================
-    // 4. Mapa
-    // ============================
-    document.addEventListener("DOMContentLoaded", () => {
-      const map = L.map("map");
-
-      // bounds globais (bairro + serviços)
+    document.addEventListener('DOMContentLoaded', () => {
+      const map = L.map('map');
       let combinedBounds = null;
 
-      // carrega o bairro + serviços
       fetch(BAIRROS_URL)
         .then(r => r.json())
         .then(gj => {
+          // Filtrar só o bairro Costa e Silva
           const onlyThisBairro = {
             type: "FeatureCollection",
             features: (gj.features || []).filter(f => {
               const props = f.properties || {};
               const rawName = props.nome_bairr || props.NOME || props.name || "";
-              const norm = normalizeName(rawName);
-              // começa com "nova brasilia"
-              return norm.startsWith(NOME_BAIRRO_ALVO);
+              return isCostaESilva(rawName);
             })
           };
 
           if (!onlyThisBairro.features.length){
-            alert("Bairro Nova Brasília não encontrado no mapa oficial (nome pode estar diferente).");
-            console.warn("Nenhuma feature encontrada para", NOME_BAIRRO_ALVO, onlyThisBairro);
+            alert("Bairro Costa e Silva não encontrado no mapa oficial.");
             return;
           }
 
-          // desenha só o polígono do bairro Nova Brasília
+          // Desenhar polígono do bairro
           const bairroLayer = L.geoJSON(onlyThisBairro, {
             style: {
-              color: "#1e293b",
+              color: "#1e293b",      // borda escura
               weight: 3,
-              fillColor: "#60a5fa",
+              fillColor: "#60a5fa",  // preenchimento azul claro
               fillOpacity: 0.25
             }
           }).addTo(map);
 
+          // Começar "bounds" com a área do bairro
           combinedBounds = bairroLayer.getBounds();
 
-          // adiciona cada serviço como marcador colorido
+          // Criar marcador por serviço (quando tiver lat/lng)
           servicesBairro.forEach(svc => {
-            if (svc.lat != null && svc.lng != null){
-              const corPin = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
-
+            if (svc.lat != null && svc.lng != null) {
+              const cor = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
               const marker = L.marker([svc.lat, svc.lng], {
-                icon: makePinIcon(corPin)
+                icon: makePinIcon(cor)
               }).addTo(map);
 
-              marker.on("mouseover", () => renderInfoPanel(svc));
-              marker.on("mouseout", resetInfoPanel);
+              // Mostrar dados no hover
+              marker.on('mouseover', () => renderInfoPanel(svc));
+              marker.on('mouseout', resetInfoPanel);
 
+              // Expandir o bounds pra incluir o ponto
               combinedBounds.extend([svc.lat, svc.lng]);
             }
           });
 
-          // enquadra o bairro + serviços
+          // Enquadrar o bairro (e os serviços, se já tiver coord)
           map.fitBounds(combinedBounds, { padding:[30,30] });
 
-          // botão reset volta pra visão geral do bairro
-          document.getElementById("resetViewBtn").addEventListener("click", () => {
+          // Botão "Resetar visão"
+          document.getElementById('resetViewBtn').addEventListener('click', () => {
             if (combinedBounds && combinedBounds.isValid()) {
               map.fitBounds(combinedBounds, { padding:[30,30] });
             }
           });
+
         })
         .catch(err => {
-          console.error("Erro carregando bairro:", err);
+          console.error("Erro carregando bairro Costa e Silva:", err);
           alert("Erro ao carregar dados do bairro.");
         });
     });

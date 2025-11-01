@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Bairro: Centro</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 
   <style>
@@ -116,6 +117,50 @@
       font-style:italic;
     }
 
+    /* legenda fixa */
+    .legend {
+      position:absolute;
+      z-index:1250;
+      left:10px;
+      bottom:10px;
+      background:rgba(255,255,255,0.96);
+      border:1px solid rgba(0,0,0,0.12);
+      border-radius:10px;
+      box-shadow:0 16px 32px rgba(0,0,0,.18);
+      padding:10px 12px;
+      font-size:12px;
+      line-height:1.4;
+      color:#1e293b;
+      min-width:170px;
+      max-width:200px;
+    }
+
+    .legend-title {
+      font-size:12px;
+      font-weight:600;
+      color:#0f172a;
+      margin-bottom:8px;
+    }
+
+    .legend-row {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:6px;
+      line-height:1.4;
+      color:#1e293b;
+      font-size:12px;
+      font-weight:500;
+    }
+
+    .legend-swatch {
+      width:12px;
+      height:12px;
+      border-radius:4px;
+      box-shadow:0 0 0 1px rgba(0,0,0,.15);
+      flex-shrink:0;
+    }
+
     @media(max-width:480px){
       .info-panel{
         width:calc(100% - 20px);
@@ -124,6 +169,13 @@
         top:auto;
         bottom:10px;
         max-width:none;
+      }
+
+      .legend {
+        left:10px;
+        bottom:auto;
+        top:10px;
+        margin-top:60px;
       }
     }
   </style>
@@ -145,6 +197,36 @@
     <div class="info-hint">Veja os detalhes do serviço.</div>
   </div>
 
+ <!-- legenda -->
+  <div class="legend" id="legendBox">
+    <div class="legend-title">Tipos de serviço</div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#2563eb;"></div>
+      <div>Saúde</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#22c55e;"></div>
+      <div>Assistência Social</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#8b5cf6;"></div>
+      <div>Cultura / Esporte</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#f97316;"></div>
+      <div>Educação</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#6b7280;"></div>
+      <div>Outros</div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
     // ========= 1. Fonte oficial dos polígonos de bairro =========
@@ -154,14 +236,19 @@
     // nome alvo (sem acento)
     const NOME_BAIRRO_ALVO = "centro";
 
+    // mapa de cores por categoria
+    const SERVICE_COLORS = {
+      "saude":   "#2563eb", // azul
+      "esporte": "#22c55e", // verde
+      "cultura": "#7c3aed", // roxo
+      "outros":  "#6b7280"  // cinza fallback
+    };
+
     // ========= 2. Serviços do Centro =========
-    // Coordenadas aproximadas definidas a partir dos endereços públicos:
-    // - Rua Rio Branco, 54 (Centro, Joinville) tem latitude ~-26.30253 e longitude ~-48.84367.  [oai_citation:0‡CEP Brasil](https://cepbrasil.org/santa-catarina/joinville/centro/89201080?utm_source=chatgpt.com)
-    // - Rua Abdon Batista, 47 (Centro, Joinville) está na faixa lat ~-26.30569 / lng ~-48.84332, associada ao Hospital São Marcos / serviços oftalmológicos no Ed. São Marcos.  [oai_citation:1‡bancodeolhosdejoinville.com.br](https://bancodeolhosdejoinville.com.br/unidades/?utm_source=chatgpt.com)
-    // - Rua Orestes Guimarães, 905 é o Centro Hospitalar Unimed (24h). Coordenadas aproximadas: lat ~-26.289803 / lng ~-48.84542.  [oai_citation:2‡unimed.coop.br](https://www.unimed.coop.br/site/web/joinville/hospital?utm_source=chatgpt.com)
-    // - Rua Tijucas, 401 é divulgado como Espaço A.Z com atividades culturais/saúde mental; rua Tijucas em Joinville tem latitude ~-26.29620 / longitude ~-48.84585.  [oai_citation:3‡Guiamapa.com](https://guiamapa.com/sc/joinville/america/rua-tijucas?utm_source=chatgpt.com)
+    // cada serviço agora tem "categoria", que define a cor do pin
     const servicesBairro = [
       {
+        categoria: "esporte",
         tipo: "Esporte",
         nomeServico: "APADI - Associação Paradesportiva de Deficiência Intelectual de Joinville",
         endereco: "R. Rio Branco, 54",
@@ -169,12 +256,13 @@
         horario: "Seg-Qua: 13h30 às 16h30",
         responsavel: "",
         observacoes:
-          "Desenvolve práticas paradesportivas para crianças, adolescentes e adultos com Autismo, Deficiência Intelectual e Síndrome de Down.",
+          "Paradesporto para crianças, adolescentes e adultos com Autismo, Deficiência Intelectual e Síndrome de Down.",
         acessibilidade: "Sim",
-     lat: -26.3010193,
+        lat: -26.3010193,
         lng: -48.8458576
       },
       {
+        categoria: "saude",
         tipo: "Saúde",
         nomeServico: "Hospital São Marcos",
         endereco: "Rua Abdon Batista, 47",
@@ -183,10 +271,11 @@
         responsavel: "",
         observacoes: "Centro hospitalar.",
         acessibilidade: "Sim",
-         lat: -26.3054548,
+        lat: -26.3054548,
         lng: -48.8471745
       },
       {
+        categoria: "saude",
         tipo: "Saúde",
         nomeServico: "Unimed Joinville (Centro Hospitalar / Pronto Atendimento 24h)",
         endereco: "Rua Orestes Guimarães, 905",
@@ -199,6 +288,7 @@
         lng: -48.8535312
       },
       {
+        categoria: "cultura",
         tipo: "Cultura",
         nomeServico: "Espaço de A.Z",
         endereco: "Rua Tijucas, 401",
@@ -206,7 +296,7 @@
         horario: "Seg-Sex: 08h às 20h",
         responsavel: "",
         observacoes:
-          "Espaço cultural e de convivência, usado para atividades comunitárias e eventos de saúde mental.",
+          "Espaço cultural e de convivência com atividades comunitárias e ações de saúde mental.",
         acessibilidade: "Sim",
         lat: -26.2959649,
         lng: -48.8461286
@@ -272,6 +362,23 @@
       `;
     }
 
+    // cria um ícone SVG colorido pro marcador
+    function makePinIcon(colorHex){
+      return L.icon({
+        iconUrl:
+          'data:image/svg+xml;utf8,' +
+          encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
+                fill="${colorHex}"/>
+              <circle cx="16" cy="12" r="4.5" fill="white"/>
+            </svg>
+          `),
+        iconSize:[32,32],
+        iconAnchor:[16,32]
+      });
+    }
+
     // ========= 4. Mapa =========
     document.addEventListener('DOMContentLoaded', () => {
       const map = L.map('map');
@@ -310,34 +417,23 @@
           // começa o bounds com o bairro
           combinedBounds = bairroLayer.getBounds();
 
-          // ícone azul padrão dos pontos
-          const pinIcon = L.icon({
-            iconUrl:
-              'data:image/svg+xml;utf8,' +
-              encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-                  <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z" fill="#2563eb"/>
-                  <circle cx="16" cy="12" r="4.5" fill="white"/>
-                </svg>
-              `),
-            iconSize: [32, 32],
-            iconAnchor: [16, 32]
-          });
-
-          // adiciona todos os serviços
+          // adiciona cada serviço como marcador colorido
           servicesBairro.forEach(svc => {
+            const color = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
             const ll = L.latLng(svc.lat, svc.lng);
-            const marker = L.marker(ll, { icon: pinIcon }).addTo(map);
 
-            // hover mostra info
+            const marker = L.marker(ll, {
+              icon: makePinIcon(color)
+            }).addTo(map);
+
             marker.on('mouseover', () => renderInfoPanel(svc));
             marker.on('mouseout', resetInfoPanel);
 
-            // garante que o bounds inclua os pontos
+            // amplia bounds pra pegar também os pontos
             combinedBounds.extend(ll);
           });
 
-          // enquadra o bairro + todos os serviços
+          // enquadra tudo
           map.fitBounds(combinedBounds, { padding:[30,30] });
 
           // botão "resetar visão"

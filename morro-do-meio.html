@@ -101,6 +101,7 @@
       line-height:1.5;
       word-break:break-word;
       white-space:normal;
+      margin-bottom:8px;
     }
 
     .badge-acess {
@@ -122,6 +123,50 @@
       font-style:italic;
     }
 
+    /* LEGENDA */
+    .legend {
+      position: absolute;
+      z-index: 1250;
+      left: 10px;
+      bottom: 10px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      box-shadow: 0 16px 32px rgba(0,0,0,.18);
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.4;
+      color:#1e293b;
+      min-width: 160px;
+      max-width: 200px;
+    }
+
+    .legend-title {
+      font-size:12px;
+      font-weight:600;
+      color:#0f172a;
+      margin-bottom:8px;
+    }
+
+    .legend-row {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:6px;
+      line-height:1.4;
+      color:#1e293b;
+      font-size:12px;
+      font-weight:500;
+    }
+
+    .legend-swatch {
+      width:12px;
+      height:12px;
+      border-radius:4px;
+      box-shadow:0 0 0 1px rgba(0,0,0,.15);
+      flex-shrink:0;
+    }
+
     @media(max-width: 480px){
       .info-panel {
         width: calc(100% - 20px);
@@ -130,6 +175,12 @@
         top: auto;
         bottom: 10px;
         max-width: none;
+      }
+      .legend {
+        left: 10px;
+        bottom: auto;
+        top: 10px;
+        margin-top: 60px;
       }
     }
   </style>
@@ -152,6 +203,36 @@
     <div class="info-hint">Veja os detalhes do serviço.</div>
   </div>
 
+  <!-- legenda fixa -->
+  <div class="legend" id="legendBox">
+    <div class="legend-title">Tipos de serviço</div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#2563eb;"></div>
+      <div>Saúde</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#22c55e;"></div>
+      <div>Assistência Social</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#8b5cf6;"></div>
+      <div>Cultura / Esporte</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#f97316;"></div>
+      <div>Educação</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#6b7280;"></div>
+      <div>Outros</div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
   <script>
@@ -164,35 +245,47 @@
     // nome do bairro alvo (sem acento, minúsculo)
     const NOME_BAIRRO_ALVO = "morro do meio";
 
+    // Paleta de cores por categoria de serviço
+    const SERVICE_COLORS = {
+      "saude":            "#2563eb",
+      "assistencia":      "#22c55e",
+      "cultura-esporte":  "#8b5cf6",
+      "educacao":         "#f97316",
+      "outros":           "#6b7280"
+    };
+
     // ============================
     // 2. Serviços do Morro do Meio
     // ============================
     const servicesBairro = [
       {
+        categoria: "saude",
         tipo: "Saúde",
         nomeServico: "O Pequeno Cotolengo",
         endereco: "Estr. Barbante, 500",
         telefone: "(47) 3842-1200",
         horario: "Seg-Sex: 07h às 17h",
         observacoes:
-          "A Organização terá atendimento gratuito para pessoas com transtorno do espectro autista, deficiência intelectual e reabilitação física.",
+          "Atendimento gratuito para pessoas com TEA, deficiência intelectual e reabilitação física.",
         acessibilidade: "Sim",
-    lat: -26.3192218,   // <- corrigido
-    lng: -48.9182911
+        lat: -26.3192218,
+        lng: -48.9182911
       },
       {
+        categoria: "saude",
         tipo: "Saúde",
         nomeServico: "UBSF Morro do Meio",
-        endereco: "R. Itapeva, S/n",
+        endereco: "R. Itapeva, s/n",
         telefone: "(47) 3436-3500",
         horario: "Seg-Sex: 07h às 17h",
         observacoes:
-          "Unidade Básica de Saúde com vacinação.",
+          "Unidade básica de saúde com vacinação.",
         acessibilidade: "Sim",
         lat: -26.3312356,
         lng: -48.9095464
       },
       {
+        categoria: "saude",
         tipo: "Saúde",
         nomeServico: "UBSF Lagoinha",
         endereco: "R. Laura Corrêa da Silva, 312",
@@ -259,6 +352,23 @@
       `;
     }
 
+    // cria um ícone colorido com base na categoria
+    function makePinIcon(colorHex){
+      return L.icon({
+        iconUrl:
+          'data:image/svg+xml;utf8,' +
+          encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
+                fill="${colorHex}"/>
+              <circle cx="16" cy="12" r="4.5" fill="white"/>
+            </svg>
+          `),
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      });
+    }
+
     // ============================
     // 4. Mapa
     // ============================
@@ -300,26 +410,17 @@
           // inicia bounds com o bairro
           combinedBounds = bairroLayer.getBounds();
 
-          // ícone azul do marcador
-          const pinIcon = L.icon({
-            iconUrl:
-              'data:image/svg+xml;utf8,' +
-              encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-                  <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z" fill="#2563eb"/>
-                  <circle cx="16" cy="12" r="4.5" fill="white"/>
-                </svg>
-              `),
-            iconSize: [32, 32],
-            iconAnchor: [16, 32]
-          });
-
           // adiciona os serviços como marcadores
           servicesBairro.forEach(svc => {
+            // cor do marcador pela categoria
+            const cat = svc.categoria || "outros";
+            const color = SERVICE_COLORS[cat] || SERVICE_COLORS["outros"];
+
             const pointLatLng = L.latLng(svc.lat, svc.lng);
 
-            // adiciona marcador
-            const marker = L.marker(pointLatLng, { icon: pinIcon }).addTo(map);
+            const marker = L.marker(pointLatLng, {
+              icon: makePinIcon(color)
+            }).addTo(map);
 
             // hover = atualiza painel
             marker.on('mouseover', () => {

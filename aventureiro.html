@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Bairro: Nova Brasília</title>
+  <title>Bairro: Aventureiro</title>
 
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -61,7 +61,7 @@
       color:#0f172a;
     }
 
-    /* painel lateral info */
+    /* painel lateral */
     .info-panel {
       position: absolute;
       z-index: 1200;
@@ -125,7 +125,7 @@
       font-style:italic;
     }
 
-    /* legenda fixa */
+    /* legenda fixa no canto inferior esquerdo */
     .legend {
       position: absolute;
       z-index: 1300;
@@ -188,11 +188,11 @@
 <body>
 
   <!-- mapa -->
-  <div id="map" aria-label="Mapa do bairro Nova Brasília"></div>
+  <div id="map" aria-label="Mapa do bairro Aventureiro"></div>
 
   <!-- barra superior -->
   <div class="topbar">
-    <div class="bairroNome">Bairro: Nova Brasília</div>
+    <div class="bairroNome">Bairro: Aventureiro</div>
     <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
     <button class="btn" id="resetViewBtn">Resetar visão</button>
   </div>
@@ -203,7 +203,7 @@
     <div class="info-hint">Veja os detalhes do serviço.</div>
   </div>
 
-  <!-- legenda fixa -->
+  <!-- legenda -->
   <div class="legend" id="legendBox">
     <div class="legend-title">Tipos de serviço</div>
 
@@ -237,15 +237,17 @@
 
   <script>
     // ============================
-    // 1. Fonte dos polígonos de bairros
+    // 1. Fonte oficial GeoJSON dos bairros de Joinville
     // ============================
     const BAIRROS_URL =
       "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
 
-    // nome alvo (normalizado sem acento)
-    const NOME_BAIRRO_ALVO = "nova brasilia";
+    // nome alvo (normalizado)
+    const NOME_BAIRRO_ALVO = "aventureiro";
 
-    // Paleta de cores por categoria
+    // ============================
+    // 2. Paleta de cores por categoria
+    // ============================
     const SERVICE_COLORS = {
       "saude":            "#2563eb", // azul
       "assistencia":      "#22c55e", // verde
@@ -255,26 +257,92 @@
     };
 
     // ============================
-    // 2. Serviços do bairro Nova Brasília
+    // 3. Serviços do bairro Aventureiro
     // ============================
+    // categoria: "saude" ou "assistencia" etc → define a cor do pin
     const servicesBairro = [
       {
         categoria: "saude",
         tipo: "Saúde / UBSF",
-        nomeServico: "UBSF Nova Brasília",
-        endereco: "R. Bom Retiro, 152",
-        telefone: "(47) 3454-9216",
-        horario: "Seg-Sex: 07h às 17h",
-        responsavel: "",
+        nomeServico: "UBSF Aventureiro I",
+        endereco: "Rua Alino José Alípio, s/nº",
+        telefone: "(47) 3467-6046",
+        horario: "Seg-Sex: 07h às 17h.",
+        responsavel: "Adriana Cardoso Pereira Cicogna",
         observacoes: "Unidade básica com atendimento odontológico e vacinação.",
         acessibilidade: "Sim",
-        lat: -26.3313387,
-        lng: -48.8702781
+        lat: -26.2551681,
+        lng: -48.8196424
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
+        nomeServico: "UBSF Parque Joinville",
+        endereco: "Rua Willy Schossland, s/nº",
+        telefone: "(47) 3472-1795",
+        horario: "Seg-Sex: 07h às 17h.",
+        responsavel: "Lucimar Fagundes Koball",
+        observacoes: "Unidade básica com atendimento odontológico e vacinação.",
+        acessibilidade: "Sim",
+        lat: -26.2561111,
+        lng: -48.8101520
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
+        nomeServico: "UBSF Aventureiro II",
+        endereco: "Rua Mauro Bley do Nascimento, s/nº",
+        telefone: "(47) 3467-3044",
+        horario: "Seg-Sex: 07h às 19h.",
+        responsavel: "Francineide de Oliveira Dutra",
+        observacoes: "Unidade básica com atendimento odontológico e vacinação.",
+        acessibilidade: "Sim",
+        lat: -26.23917,
+        lng: -48.80426
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
+        nomeServico: "UBSF Aventureiro III",
+        endereco: "Rua Santa Luzia, s/nº",
+        telefone: "(47) 3435-8486",
+        horario: "Seg-Sex: 08h às 17h.",
+        responsavel: "Gislaine Batista de Souza",
+        observacoes: "Unidade básica com atendimento odontológico e vacinação.",
+        acessibilidade: "Sim",
+        lat: -26.2401970,
+        lng: -48.8131368
+      },
+      {
+        categoria: "saude",
+        tipo: "Saúde / UPA 24h",
+        nomeServico: "UPA 24h Leste",
+        endereco: "Rua Mafalda Laurindo, 262",
+        telefone: "(47) 3489-9800",
+        horario: "Todos os dias, 24h.",
+        responsavel: "Luciene Ribeiro Garcia",
+        observacoes: "Atendimento a usuários em situações de urgência e emergência.",
+        acessibilidade: "Sim",
+        lat: -26.24442,
+        lng: -48.81835
+      },
+      {
+        categoria: "assistencia",
+        tipo: "Assistência Social / CRAS",
+        nomeServico: "CRAS Aventureiro",
+        endereco: "Rua Theonesto Westrupp, s/nº",
+        telefone: "(47) 3437-7359",
+        horario: "Seg-Sex: 08h às 17h.",
+        responsavel: "Crystiane Tesseroli da Silva Castelen",
+        observacoes: "Unidade de proteção social básica.",
+        acessibilidade: "Sim",
+        lat: -26.23785,
+        lng: -48.81173
       }
     ];
 
     // ============================
-    // 3. Utilitários
+    // 4. Utilitários
     // ============================
     function escapeHTML(str){
       return String(str)
@@ -285,6 +353,7 @@
         .replace(/'/g,'&#39;');
     }
 
+    // normaliza texto pra ignorar acento/maiúscula
     function normalizeName(str){
       return String(str || "")
         .normalize("NFD")
@@ -330,54 +399,50 @@
       `;
     }
 
-    // Cria um pino colorido por categoria
+    // gera um ícone de pin colorido de acordo com a categoria
     function makePinIcon(colorHex){
       return L.icon({
-        iconUrl:
-          'data:image/svg+xml;utf8,' +
-          encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
-                fill="${colorHex}"/>
-              <circle cx="16" cy="12" r="4.5" fill="white"/>
-            </svg>
-          `),
+        iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+            <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
+              fill="${colorHex}"/>
+            <circle cx="16" cy="12" r="4.5" fill="white"/>
+          </svg>
+        `),
         iconSize: [32, 32],
         iconAnchor: [16, 32]
       });
     }
 
     // ============================
-    // 4. Mapa
+    // 5. Mapa
     // ============================
-    document.addEventListener("DOMContentLoaded", () => {
-      const map = L.map("map");
-
-      // bounds globais (bairro + serviços)
+    document.addEventListener('DOMContentLoaded', () => {
+      const map = L.map('map');
       let combinedBounds = null;
 
-      // carrega o bairro + serviços
       fetch(BAIRROS_URL)
         .then(r => r.json())
         .then(gj => {
+          // filtra só o bairro Aventureiro
           const onlyThisBairro = {
             type: "FeatureCollection",
             features: (gj.features || []).filter(f => {
               const props = f.properties || {};
               const rawName = props.nome_bairr || props.NOME || props.name || "";
               const norm = normalizeName(rawName);
-              // começa com "nova brasilia"
+              // alguns dados oficiais usam "Aventureiro I/II" etc., então usamos startsWith
               return norm.startsWith(NOME_BAIRRO_ALVO);
             })
           };
 
           if (!onlyThisBairro.features.length){
-            alert("Bairro Nova Brasília não encontrado no mapa oficial (nome pode estar diferente).");
+            alert("Bairro Aventureiro não encontrado no mapa oficial.");
             console.warn("Nenhuma feature encontrada para", NOME_BAIRRO_ALVO, onlyThisBairro);
             return;
           }
 
-          // desenha só o polígono do bairro Nova Brasília
+          // desenha polígono do bairro Aventureiro
           const bairroLayer = L.geoJSON(onlyThisBairro, {
             style: {
               color: "#1e293b",
@@ -387,36 +452,36 @@
             }
           }).addTo(map);
 
+          // começa os limites com o bairro
           combinedBounds = bairroLayer.getBounds();
 
-          // adiciona cada serviço como marcador colorido
+          // adiciona marcadores para cada serviço
           servicesBairro.forEach(svc => {
             if (svc.lat != null && svc.lng != null){
               const corPin = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
-
               const marker = L.marker([svc.lat, svc.lng], {
                 icon: makePinIcon(corPin)
               }).addTo(map);
 
-              marker.on("mouseover", () => renderInfoPanel(svc));
-              marker.on("mouseout", resetInfoPanel);
+              marker.on('mouseover', () => renderInfoPanel(svc));
+              marker.on('mouseout', resetInfoPanel);
 
               combinedBounds.extend([svc.lat, svc.lng]);
             }
           });
 
-          // enquadra o bairro + serviços
+          // enquadra bairro + serviços
           map.fitBounds(combinedBounds, { padding:[30,30] });
 
-          // botão reset volta pra visão geral do bairro
-          document.getElementById("resetViewBtn").addEventListener("click", () => {
+          // botão resetar visão
+          document.getElementById('resetViewBtn').addEventListener('click', () => {
             if (combinedBounds && combinedBounds.isValid()) {
               map.fitBounds(combinedBounds, { padding:[30,30] });
             }
           });
         })
         .catch(err => {
-          console.error("Erro carregando bairro:", err);
+          console.error("Erro carregando bairro Aventureiro:", err);
           alert("Erro ao carregar dados do bairro.");
         });
     });

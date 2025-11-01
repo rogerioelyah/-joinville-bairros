@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Bairro: Saguaçu</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <title>Bairro: Anita Garibaldi</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin="">
 
   <style>
     html, body {
@@ -118,47 +121,42 @@
       font-style:italic;
     }
 
-    /* legenda fixa no canto */
+    /* legenda */
     .legend {
       position:absolute;
-      z-index:1250;
+      z-index:1300;
       left:10px;
       bottom:10px;
-      background:rgba(255,255,255,0.96);
+      background:rgba(255,255,255,.96);
       border:1px solid rgba(0,0,0,0.12);
       border-radius:10px;
-      box-shadow:0 16px 32px rgba(0,0,0,.18);
-      padding:10px 12px;
+      box-shadow:0 16px 32px rgba(0,0,0,.2);
+      padding:12px 14px;
+      min-width:180px;
       font-size:12px;
       line-height:1.4;
       color:#1e293b;
-      min-width:170px;
-      max-width:200px;
     }
-
     .legend-title {
-      font-size:12px;
+      font-size:13px;
       font-weight:600;
       color:#0f172a;
       margin-bottom:8px;
     }
-
     .legend-row {
       display:flex;
       align-items:center;
       gap:8px;
       margin-bottom:6px;
-      line-height:1.4;
-      color:#1e293b;
       font-size:12px;
       font-weight:500;
+      color:#374151;
     }
-
     .legend-swatch {
-      width:12px;
-      height:12px;
+      width:14px;
+      height:14px;
       border-radius:4px;
-      box-shadow:0 0 0 1px rgba(0,0,0,.15);
+      border:1px solid rgba(0,0,0,.15);
       flex-shrink:0;
     }
 
@@ -173,21 +171,20 @@
       }
 
       .legend {
-        left:10px;
-        bottom:auto;
-        top:10px;
-        margin-top:60px;
+        font-size:12px;
+        min-width:150px;
       }
     }
   </style>
 </head>
 <body>
+
   <!-- mapa -->
-  <div id="map" aria-label="Mapa do bairro Saguaçu"></div>
+  <div id="map" aria-label="Mapa do bairro Anita Garibaldi"></div>
 
   <!-- barra superior -->
   <div class="topbar">
-    <div class="bairroNome">Bairro: Saguaçu</div>
+    <div class="bairroNome">Bairro: Anita Garibaldi</div>
     <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
     <button class="btn" id="resetViewBtn">Resetar visão</button>
   </div>
@@ -209,47 +206,87 @@
 
     <div class="legend-row">
       <div class="legend-swatch" style="background:#22c55e;"></div>
-      <div>Esporte / Paradesporto</div>
+      <div>Assistência Social</div>
     </div>
 
     <div class="legend-row">
-      <div class="legend-swatch" style="background:#7c3aed;"></div>
-      <div>Cultura / Convivência</div>
+      <div class="legend-swatch" style="background:#8b5cf6;"></div>
+      <div>Cultura / Esporte</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#f97316;"></div>
+      <div>Educação</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#6b7280;"></div>
+      <div>Outros</div>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
-    // ========= 1. Polígono do bairro =============
+    // ========= 1. Polígono oficial dos bairros (GeoJSON da Prefeitura) =========
     const BAIRROS_URL =
       "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
 
     // nome alvo (sem acento, minúsculo)
-    const NOME_BAIRRO_ALVO = "saguacu";
+    const NOME_BAIRRO_ALVO = "anita garibaldi";
 
-    // mapa de cores da legenda -> cor do pin
-    const SERVICE_COLORS = {
-      "saude":   "#2563eb", // azul
-      "esporte": "#22c55e", // verde
-      "cultura": "#7c3aed", // roxo
-      "outros":  "#6b7280"  // fallback
-    };
-
-    // ========= 2. Serviços do bairro Saguaçu =========
+    // ========= 2. Lista de serviços do bairro Anita Garibaldi =========
+    // ATENÇÃO: as coordenadas (lat/lng) abaixo são aproximadas dentro do bairro,
+    // só pra já desenhar no mapa com zoom e bounds corretos.
+    // Se quiser precisão de porta depois é só ajustar cada ponto.
     const servicesBairro = [
       {
-        categoria: "saude",
-        tipo: "Saúde",
-        nomeServico: "UBSF Saguaçu",
-        endereco: "Rua Iririú, 110",
-        telefone: "(47) 3419-0208",
-        horario: "Seg-Sex: 07h às 17h",
-        responsavel: "Edna Campigoto Duarte",
+        tipo: "Assistência Social",
+        nomeServico: "CAPS II Nossa Casa",
+        endereco: "Rua Pernambuco, 115",
+        telefone: "(47) 3422-7161",
+        horario: "Seg-Sex: 07h às 18h",
+        responsavel: "Priscila Tocachelis Battistella",
         observacoes:
-          "Ações de saúde, no âmbito individual e coletivo, segundo os princípios da Política Nacional de Atenção Primária.",
+          "Atendimento a pessoas com transtornos mentais graves e persistentes, cuidado em crise e reabilitação psicossocial.",
         acessibilidade: "Sim",
-        lat: -26.2831263,
-        lng: -48.8434216
+        lat: -26.3135,
+        lng: -48.8489
+      },
+      {
+        tipo: "Saúde",
+        nomeServico: "Hospital São José",
+        endereco: "Av. Getúlio Vargas, 238",
+        telefone: "",
+        horario: "",
+        responsavel: "",
+        observacoes: "Centro hospitalar.",
+        acessibilidade: "Sim",
+        lat: -26.3152,
+        lng: -48.8465
+      },
+      {
+        tipo: "Saúde",
+        nomeServico: "HC Medicina & Saúde",
+        endereco: "Rua Rio Grande do Sul, 287",
+        telefone: "",
+        horario: "",
+        responsavel: "",
+        observacoes: "Atendimento em saúde especializada.",
+        acessibilidade: "Sim",
+        lat: -26.3144,
+        lng: -48.8502
+      },
+      {
+        tipo: "Saúde",
+        nomeServico: "CEO – Centro de Especialidades Odontológicas (PAM Bucarein)",
+        endereco: "R. Porto União, 1140",
+        telefone: "",
+        horario: "",
+        responsavel: "",
+        observacoes: "Especialidades odontológicas.",
+        acessibilidade: "Sim",
+        lat: -26.3170,
+        lng: -48.8520
       }
     ];
 
@@ -263,12 +300,39 @@
         .replace(/'/g,'&#39;');
     }
 
+    // normaliza nome pra comparar com o GeoJSON sem acento/caixa
     function normalizeName(str){
       return String(str || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g,"")
         .toLowerCase()
         .trim();
+    }
+
+    // escolhe a cor do marcador de acordo com o tipo de serviço
+    function getColorForTipo(tipo){
+      const t = (tipo || "").toLowerCase().trim();
+      if (t.startsWith("saúde")) return "#2563eb"; // azul
+      if (t.startsWith("assistência")) return "#22c55e"; // verde
+      if (t.startsWith("cultura") || t.startsWith("esporte")) return "#8b5cf6"; // roxo
+      if (t.startsWith("educa")) return "#f97316"; // laranja
+      return "#6b7280"; // cinza / Outros
+    }
+
+    // gera um ícone SVG customizado com a cor certa
+    function makePinIcon(hexColor){
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+          <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
+            fill="${hexColor}"/>
+          <circle cx="16" cy="12" r="4.5" fill="white"/>
+        </svg>
+      `;
+      return L.icon({
+        iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(svg),
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      });
     }
 
     function renderInfoPanel(svc){
@@ -297,8 +361,10 @@
           <div class="info-value">${escapeHTML(svc.responsavel)}</div>
         ` : ""}
 
-        <div class="info-label">Descrição / Observações</div>
-        <div class="info-value">${escapeHTML(svc.observacoes)}</div>
+        ${svc.observacoes ? `
+          <div class="info-label">Descrição / Observações</div>
+          <div class="info-value">${escapeHTML(svc.observacoes)}</div>
+        ` : ""}
 
         <div class="badge-acess">Acessibilidade: ${escapeHTML(svc.acessibilidade)}</div>
       `;
@@ -312,23 +378,6 @@
       `;
     }
 
-    // gera um ícone colorido com base na categoria
-    function makePinIcon(colorHex){
-      return L.icon({
-        iconUrl:
-          'data:image/svg+xml;utf8,' +
-          encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
-                fill="${colorHex}"/>
-              <circle cx="16" cy="12" r="4.5" fill="white"/>
-            </svg>
-          `),
-        iconSize:[32,32],
-        iconAnchor:[16,32]
-      });
-    }
-
     // ========= 4. Mapa =========
     document.addEventListener('DOMContentLoaded', () => {
       const map = L.map('map');
@@ -337,7 +386,7 @@
       fetch(BAIRROS_URL)
         .then(r => r.json())
         .then(gj => {
-          // filtra só o Saguaçu
+          // filtra só o bairro Anita Garibaldi
           const onlyThisBairro = {
             type: "FeatureCollection",
             features: (gj.features || []).filter(f => {
@@ -349,12 +398,12 @@
           };
 
           if (!onlyThisBairro.features.length){
-            alert("Bairro não encontrado no mapa oficial.");
+            alert("Bairro não encontrado no mapa oficial (nome pode estar diferente).");
             console.warn("Nenhuma feature encontrada para", NOME_BAIRRO_ALVO, onlyThisBairro);
             return;
           }
 
-          // pinta o polígono do Saguaçu
+          // desenha o polígono do bairro
           const bairroLayer = L.geoJSON(onlyThisBairro, {
             style: {
               color: "#1e293b",
@@ -364,29 +413,29 @@
             }
           }).addTo(map);
 
-          // inicia o bounds com o bairro
+          // começa o bounds pelo bairro
           combinedBounds = bairroLayer.getBounds();
 
-          // adiciona os serviços
+          // adiciona os serviços com marcadores coloridos
           servicesBairro.forEach(svc => {
-            const color = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
-            const ll = L.latLng(svc.lat, svc.lng);
+            const pointLatLng = L.latLng(svc.lat, svc.lng);
 
-            const marker = L.marker(ll, {
-              icon: makePinIcon(color)
-            }).addTo(map);
+            const color = getColorForTipo(svc.tipo);
+            const icon = makePinIcon(color);
+
+            const marker = L.marker(pointLatLng, { icon }).addTo(map);
 
             marker.on('mouseover', () => renderInfoPanel(svc));
             marker.on('mouseout', resetInfoPanel);
 
-            // garante que o bounds inclua cada ponto
-            combinedBounds.extend(ll);
+            // amplia a área pra incluir esse ponto
+            combinedBounds.extend(pointLatLng);
           });
 
-          // enquadra bairro + pontos
+          // enquadra tudo (bairro + pontos)
           map.fitBounds(combinedBounds, { padding:[30,30] });
 
-          // botão resetar visão
+          // botão "Resetar visão"
           document.getElementById('resetViewBtn').addEventListener('click', () => {
             if (combinedBounds && combinedBounds.isValid()) {
               map.fitBounds(combinedBounds, { padding:[30,30] });

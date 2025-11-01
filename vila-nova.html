@@ -26,6 +26,7 @@
       background: #fff;
     }
 
+    /* barra superior */
     .topbar {
       position: absolute;
       z-index: 1100;
@@ -60,6 +61,7 @@
       color:#0f172a;
     }
 
+    /* painel lateral */
     .info-panel {
       position: absolute;
       z-index: 1200;
@@ -101,6 +103,7 @@
       line-height:1.5;
       word-break:break-word;
       white-space:normal;
+      margin-bottom:8px;
     }
 
     .badge-acess {
@@ -122,6 +125,49 @@
       font-style:italic;
     }
 
+    /* legenda fixa no canto inferior esquerdo */
+    .legend {
+      position: absolute;
+      z-index: 1300;
+      left: 10px;
+      bottom: 20px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #111827;
+      min-width: 160px;
+    }
+
+    .legend-title {
+      font-size: 12px;
+      font-weight: 700;
+      color:#111827;
+      margin-bottom:6px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom:4px;
+      font-size:12px;
+      line-height:1.3;
+      color:#1f2937;
+      font-weight:500;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.2);
+      flex-shrink: 0;
+    }
+
     @media(max-width: 480px){
       .info-panel {
         width: calc(100% - 20px);
@@ -131,22 +177,60 @@
         bottom: 10px;
         max-width: none;
       }
+
+      .legend {
+        left: 10px;
+        bottom: 140px;
+      }
     }
   </style>
 </head>
 <body>
 
+  <!-- mapa -->
   <div id="map" aria-label="Mapa do bairro Vila Nova"></div>
 
+  <!-- barra superior -->
   <div class="topbar">
     <div class="bairroNome">Bairro: Vila Nova</div>
     <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
     <button class="btn" id="resetViewBtn">Resetar visão</button>
   </div>
 
+  <!-- painel lateral dinâmico -->
   <div class="info-panel" id="infoPanel">
     <div class="info-title">Passe o mouse sobre um ponto</div>
     <div class="info-hint">Veja os detalhes do serviço.</div>
+  </div>
+
+  <!-- legenda -->
+  <div class="legend" id="legendBox">
+    <div class="legend-title">Tipos de serviço</div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#2563eb;"></div>
+      <div>Saúde</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#8b5cf6;"></div>
+      <div>Recreação / Cultura / Esporte</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#f97316;"></div>
+      <div>Educação</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#22c55e;"></div>
+      <div>Assistência Social</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#6b7280;"></div>
+      <div>Outros</div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -162,50 +246,72 @@
       "https://raw.githubusercontent.com/tbrugz/geodata-br/master/geojson/geojs-42-mun.json";
 
     // ============================
-    // 2. Config bairro + serviços
+    // 2. Config bairro
     // ============================
     const NOME_BAIRRO_ALVO = "vila nova";
 
+    // Paleta fixa de cores por categoria
+    // Essas cores também aparecem na legenda visual
+    const SERVICE_COLORS = {
+      "saude":            "#2563eb", // azul
+      "assistencia":      "#22c55e", // verde
+      "cultura-esporte":  "#8b5cf6", // roxo
+      "educacao":         "#f97316", // laranja
+      "outros":           "#6b7280"  // cinza
+    };
+
+    // ============================
+    // 3. Serviços do bairro Vila Nova
+    // ============================
+    // Adicionamos "categoria" em cada item p/ controlar a cor do pin
     const servicesBairro = [
       {
-        tipo: "Saúde",
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
         nomeServico: "UBSF Vila Nova 1",
         endereco: "R. Arthur Hille, 241",
         telefone: "(47) 3435-3956",
         horario: "Seg-Sex: 07h às 19h",
+        responsavel: "",
         observacoes: "Unidade básica com atendimento odontológico e vacinação.",
         acessibilidade: "Sim",
         lat: -26.2806598,
         lng: -48.9433735
       },
       {
-        tipo: "Saúde",
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
         nomeServico: "UBSF Vila Nova Central",
         endereco: "R. XV de Novembro, 8436",
         telefone: "(47) 3439-2201",
         horario: "Seg-Sex: 07h às 19h",
+        responsavel: "",
         observacoes: "Unidade básica com atendimento odontológico e vacinação.",
         acessibilidade: "Sim",
         lat: -26.2871338,
         lng: -48.9926934
       },
       {
-        tipo: "Saúde",
+        categoria: "saude",
+        tipo: "Saúde / UBSF",
         nomeServico: "UBSF Vila Nova Rural",
         endereco: "Estrada Blumenau S/N",
         telefone: "(47) 3130-1900",
         horario: "Seg-Sex: 08h às 17h",
+        responsavel: "",
         observacoes: "Unidade básica com vacinação.",
         acessibilidade: "Sim",
         lat: -26.3149573,
         lng: -48.9502728
       },
       {
-        tipo: "Recreação",
+        categoria: "cultura-esporte",
+        tipo: "Recreação / Cultura / Esporte",
         nomeServico: "SESC Vila Nova",
         endereco: "R. Alwin Pasold",
         telefone: "(47) 3434-6991",
         horario: "Seg-Sab: Atividades diurnas e noturnas.",
+        responsavel: "",
         observacoes: "Espaço de recreação, com aula cultural e esportivo.",
         acessibilidade: "Sim",
         lat: -26.2846854,
@@ -214,7 +320,7 @@
     ];
 
     // ============================
-    // 3. Helpers
+    // 4. Helpers
     // ============================
     function escapeHTML(str){
       return String(str)
@@ -233,6 +339,7 @@
         .trim();
     }
 
+    // monta o painel com os dados do serviço
     function renderInfoPanel(svc){
       const panel = document.getElementById('infoPanel');
       panel.innerHTML = `
@@ -250,6 +357,11 @@
         <div class="info-label">Horário de Atendimento</div>
         <div class="info-value">${escapeHTML(svc.horario)}</div>
 
+        ${svc.responsavel ? `
+          <div class="info-label">Responsável</div>
+          <div class="info-value">${escapeHTML(svc.responsavel)}</div>
+        ` : ""}
+
         <div class="info-label">Descrição / Observações</div>
         <div class="info-value">${escapeHTML(svc.observacoes)}</div>
 
@@ -257,6 +369,7 @@
       `;
     }
 
+    // volta painel pro estado inicial
     function resetInfoPanel(){
       const panel = document.getElementById('infoPanel');
       panel.innerHTML = `
@@ -265,19 +378,35 @@
       `;
     }
 
+    // gera dinamicamente um pin SVG na cor da categoria
+    function makePinIcon(colorHex){
+      return L.icon({
+        iconUrl:
+          'data:image/svg+xml;utf8,' +
+          encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
+              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
+                fill="${colorHex}"/>
+              <circle cx="16" cy="12" r="4.5" fill="white"/>
+            </svg>
+          `),
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      });
+    }
+
     // ============================
-    // 4. Mapa
+    // 5. Mapa
     // ============================
     document.addEventListener('DOMContentLoaded', () => {
       const map = L.map('map');
 
-      let combinedBounds = null; // bounds geral (Joinville + pins)
+      let combinedBounds = null; // vamos acumulando Joinville + bairro + serviços
 
-      // 4.1 Primeiro: carregar Joinville (limite municipal)
+      // 5.1 desenha os limites do município (Joinville)
       fetch(CITY_URL)
         .then(r => r.json())
         .then(cityData => {
-          // filtrar só Joinville
           const feats = (cityData.features || []).filter(f => {
             const p = f.properties || {};
             const n = String(
@@ -288,28 +417,26 @@
 
           if (!feats.length) {
             console.warn("Não encontrei Joinville no CITY_URL");
-            return;
+          } else {
+            const cityLayer = L.geoJSON(
+              { type:"FeatureCollection", features: feats },
+              {
+                style: {
+                  color:"#94a3b8",    // cinza-azulado leve
+                  weight:2,
+                  fillOpacity:0
+                }
+              }
+            ).addTo(map);
+
+            combinedBounds = cityLayer.getBounds();
           }
 
-          const cityLayer = L.geoJSON(
-            { type:"FeatureCollection", features: feats },
-            {
-              style: {
-                color:"#94a3b8",    // cinza-azulado leve
-                weight:2,
-                fillOpacity:0
-              }
-            }
-          ).addTo(map);
-
-          // inicia o bounds combinado com Joinville
-          combinedBounds = cityLayer.getBounds();
-
-          // depois que desenhei Joinville, carrego o bairro e os pontos
-          carregarBairroEservicos();
+          // depois de desenhar a cidade, carregamos bairro + serviços
+          carregarBairroEServicos();
         });
 
-      function carregarBairroEservicos(){
+      function carregarBairroEServicos(){
         fetch(BAIRROS_URL)
           .then(r => r.json())
           .then(gj => {
@@ -324,12 +451,12 @@
             };
 
             if (!onlyThisBairro.features.length){
-              alert("Bairro não encontrado no mapa oficial (nome pode estar diferente).");
+              alert("Bairro Vila Nova não encontrado no mapa oficial (nome pode estar diferente).");
               console.warn("Nenhuma feature encontrada para", NOME_BAIRRO_ALVO, onlyThisBairro);
               return;
             }
 
-            // desenha só o bairro alvo
+            // desenha o polígono do bairro
             const bairroLayer = L.geoJSON(onlyThisBairro, {
               style: {
                 color: "#1e293b",
@@ -339,43 +466,33 @@
               }
             }).addTo(map);
 
-            // amplia o bounds combinado para incluir o polígono do bairro
-            combinedBounds.extend(bairroLayer.getBounds());
+            // se já tínhamos bounds da cidade, expandimos;
+            // se não tínhamos (falhou city), começamos agora
+            if (combinedBounds){
+              combinedBounds.extend(bairroLayer.getBounds());
+            } else {
+              combinedBounds = bairroLayer.getBounds();
+            }
 
-            // ícone dos serviços
-            const pinIcon = L.icon({
-              iconUrl:
-                'data:image/svg+xml;utf8,' +
-                encodeURIComponent(`
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-                    <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z" fill="#2563eb"/>
-                    <circle cx="16" cy="12" r="4.5" fill="white"/>
-                  </svg>
-                `),
-              iconSize: [32, 32],
-              iconAnchor: [16, 32]
-            });
-
-            // criar marcador pra cada serviço
+            // adiciona os marcadores coloridos
             servicesBairro.forEach(svc => {
-              const ll = L.latLng(svc.lat, svc.lng);
-              const marker = L.marker(ll, { icon: pinIcon }).addTo(map);
+              if (svc.lat != null && svc.lng != null){
+                const corPin = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
+                const marker = L.marker([svc.lat, svc.lng], {
+                  icon: makePinIcon(corPin)
+                }).addTo(map);
 
-              marker.on('mouseover', () => {
-                renderInfoPanel(svc);
-              });
-              marker.on('mouseout', () => {
-                resetInfoPanel();
-              });
+                marker.on('mouseover', () => renderInfoPanel(svc));
+                marker.on('mouseout', resetInfoPanel);
 
-              // bounds agora também inclui cada serviço
-              combinedBounds.extend(ll);
+                combinedBounds.extend([svc.lat, svc.lng]);
+              }
             });
 
-            // enquadrar tudo:
+            // enquadra tudo (Joinville + bairro + pins)
             map.fitBounds(combinedBounds, { padding:[30,30] });
 
-            // reset visão usa esse bounds global
+            // botão reset volta pra visão geral
             document.getElementById('resetViewBtn').addEventListener('click', () => {
               if (combinedBounds && combinedBounds.isValid()) {
                 map.fitBounds(combinedBounds, { padding:[30,30] });
