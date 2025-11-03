@@ -80,12 +80,14 @@
       color: #0f172a;
       min-width: 150px;
     }
+
     .legend-title {
       font-size:12px;
       font-weight:600;
       margin-bottom:6px;
       color:#0f172a;
     }
+
     .legend-item {
       display:flex;
       align-items:center;
@@ -95,6 +97,7 @@
       line-height:1.3;
       color:#1e293b;
     }
+
     .legend-swatch {
       width:16px;
       height:16px;
@@ -115,12 +118,12 @@
   <!-- legenda das zonas -->
   <div class="legend" id="legendBox">
     <div class="legend-title">Zonas</div>
-    <!-- você está usando só Zona Oeste por enquanto, mas deixei as outras cores para futuro -->
     <div class="legend-item"><div class="legend-swatch" style="background:#fbcfe8;"></div>Zona Oeste</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#93c5fd;"></div>Zona Norte</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#86efac;"></div>Zona Sul</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#fde68a;"></div>Zona Leste</div>
     <div class="legend-item"><div class="legend-swatch" style="background:#c7c7c7;"></div>Zona Central</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#201e1e;"></div>Bairro sem serviço identificado</div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -161,38 +164,33 @@
       "atiradores": "atiradores",
       "centro": "centro",
       "gloria": "gloria",
-      "saguacu": "saguacu"
+      "saguacu": "saguacu",
+      "dona francisca": "dona-francisca",
+      "zona industrial tupy": "zona-industrial-tupy"
     };
 
     function getBairroPageName(rawName){
       const norm = normalizeName(rawName);
-      // tenta achar correspondência direta
       for (const k in BAIRRO_PAGE_OVERRIDE){
         if (norm.startsWith(k)) {
           return BAIRRO_PAGE_OVERRIDE[k];
         }
       }
-      // fallback genérico
       return normalizeFileName(rawName);
     }
 
     // -------------------------
     // 3. Mapeamento Bairro -> Zona
-    // !!! AQUI QUE VEM SUA DECISÃO !!!
-    // Você falou que TODOS estes bairros são "zona oeste":
-    // Vila Nova, Nova Brasília, Morro do Meio, São Marcos,
-    // América, Atiradores, Centro, Glória, Saguaçu
-    //
-    // Vou colocar todos como zona_oeste.
     // -------------------------
     const ZONA_POR_BAIRRO = {
+      // Zona Oeste
       "vila nova":        "zona_oeste",
       "nova brasilia":    "zona_oeste",
       "morro do meio":    "zona_oeste",
       "sao marcos":       "zona_oeste",
-      "são marcos":       "zona_oeste",   // com acento, só pra garantir
+      "são marcos":       "zona_oeste",
 
-             // Zona Centro
+      // Zona Centro
       "america":          "zona_centro",
       "américa":          "zona_centro",
       "atiradores":       "zona_centro",
@@ -202,46 +200,68 @@
       "saguacu":          "zona_centro",
       "saguaçu":          "zona_centro",
 
-       // Zona Leste
-  "aventureiro":      "zona_leste",
-  "comasa":           "zona_leste",
-  "iririu":           "zona_leste",
-  "iririú":           "zona_leste",
-  "jardim iririu":    "zona_leste",
-  "jardim iririú":    "zona_leste",
-  "jardim paraiso":   "zona_leste",
-  "jardim paraíso":   "zona_leste",
-  "jardim sofia":     "zona_leste",
-  "vila cubatao":     "zona_leste",
-  "vila cubatão":     "zona_leste",
-  "boa vista":        "zona_leste",
-  "espinheiros":      "zona_leste",
+      // Zona Leste
+      "aventureiro":      "zona_leste",
+      "comasa":           "zona_leste",
+      "iririu":           "zona_leste",
+      "iririú":           "zona_leste",
+      "jardim iririu":    "zona_leste",
+      "jardim iririú":    "zona_leste",
+      "jardim paraiso":   "zona_leste",
+      "jardim paraíso":   "zona_leste",
+      "jardim sofia":     "zona_leste",
+      "vila cubatao":     "zona_leste",
+      "vila cubatão":     "zona_leste",
+      "boa vista":        "zona_leste",
+      "espinheiros":      "zona_leste",
 
-   // Zona Norte
-  "pirabeiraba":          "zona_norte",
-  "costa e silva":        "zona_norte",
-  "rio bonito":           "zona_norte",
-  "zona industrial norte":"zona_norte",
-  "santo antonio":        "zona_norte",
-  "santo antônio":        "zona_norte",
-  "bom retiro":           "zona_norte"
+      // Zona Norte
+      "pirabeiraba":          "zona_norte",
+      "costa e silva":        "zona_norte",
+      "rio bonito":           "zona_norte",
+      "zona industrial norte":"zona_norte",
+      "santo antonio":        "zona_norte",
+      "santo antônio":        "zona_norte",
+      "bom retiro":           "zona_norte",
 
+      // Zona Sul
+      "ademar garcia":     "zona_sul",
+      "boehmerwald":       "zona_sul",
+      "fatima":            "zona_sul",
+      "fátima":            "zona_sul",
+      "floresta":          "zona_sul",
+      "guanabara":         "zona_sul",
+      "itaum":             "zona_sul",
+      "itinga":            "zona_sul",
+      "jarivatuba":        "zona_sul",
+      "joao costa":        "zona_sul",
+      "joão costa":        "zona_sul",
+      "paranaguamirim":    "zona_sul",
+      "parque guarani":    "zona_sul",
+      "petropolis":        "zona_sul",
+      "petrópolis":        "zona_sul",
+      "profipo":           "zona_sul",
+      "santa catarina":    "zona_sul",
+      "ulysses guimaraes": "zona_sul",
+      "ulisses guimaraes": "zona_sul",
+
+      // Sem serviço identificado
+      "dona francisca":         "sem_servico",
+      "zona industrial tupy":   "sem_servico"
     };
 
     // -------------------------
     // 4. Paleta de cor por zona
-    // zona_oeste = rosa claro (#fbcfe8) com borda vinho escuro (#9d174d)
-    // isso já bate com a legenda que está mostrando "Zona Oeste"
     // -------------------------
     const CORES_POR_ZONA = {
-      "zona_norte":  { fill:"#93c5fd", stroke:"#1e3a8a" }, // azul
-      "zona_sul":    { fill:"#86efac", stroke:"#065f46" }, // verde
-      "zona_leste":  { fill:"#fde68a", stroke:"#92400e" }, // amarelo
-      "zona_oeste":  { fill:"#fbcfe8", stroke:"#9d174d" }, // rosa
-      "zona_centro": { fill:"#c7c7c7", stroke:"#374151" }  // cinza
+      "zona_norte":  { fill:"#93c5fd", stroke:"#1e3a8a" },  // azul
+      "zona_sul":    { fill:"#86efac", stroke:"#065f46" },  // verde
+      "zona_leste":  { fill:"#fde68a", stroke:"#92400e" },  // amarelo
+      "zona_oeste":  { fill:"#fbcfe8", stroke:"#9d174d" },  // rosa
+      "zona_centro": { fill:"#c7c7c7", stroke:"#374151" },  // cinza claro
+      "sem_servico": { fill:"#201e1e", stroke:"#000000" }   // preto (sem serviço identificado)
     };
 
-    // fallback pra bairro que não tiver zona definida ainda
     const COR_FALLBACK = { fill:"#ddd", stroke:"#555" };
 
     // -------------------------
@@ -272,9 +292,9 @@
               const paleta = zona && CORES_POR_ZONA[zona] ? CORES_POR_ZONA[zona] : COR_FALLBACK;
 
               return {
-                color: paleta.stroke,   // borda do bairro
+                color: paleta.stroke,
                 weight: 1.8,
-                fillColor: paleta.fill, // cor da zona
+                fillColor: paleta.fill,
                 fillOpacity: 0.35
               };
             },
@@ -284,7 +304,6 @@
               const rawName    = props.nome_bairr || props.NOME || props.name || 'Bairro';
               const bairroName = String(rawName);
 
-              // tooltip com o nome do bairro
               layer.bindTooltip(
                 '<div class="bairro-tooltip-nome">' + bairroName + '</div>',
                 {
@@ -304,7 +323,6 @@
                 layer.closeTooltip && layer.closeTooltip();
               });
 
-              // clique -> navega pra página do bairro
               layer.on('click', () => {
                 const pageBase = getBairroPageName(bairroName);
                 const target   = pageBase + ".html";

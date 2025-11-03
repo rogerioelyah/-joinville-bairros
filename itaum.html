@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Bairro: América</title>
+  <title>Bairro: Itaum</title>
 
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -26,6 +26,7 @@
       background: #fff;
     }
 
+    /* barra superior */
     .topbar {
       position: absolute;
       z-index: 1100;
@@ -60,6 +61,7 @@
       color:#0f172a;
     }
 
+    /* painel lateral */
     .info-panel {
       position: absolute;
       z-index: 1200;
@@ -75,7 +77,6 @@
       font-size: 13px;
       line-height: 1.5;
       color:#1e293b;
-      transition: all 0.3s ease;
     }
 
     .info-title {
@@ -99,9 +100,8 @@
       font-size:13px;
       color:#374151;
       line-height:1.5;
-      word-break:break-word;
-      white-space:normal;
       margin-bottom:8px;
+      word-break:break-word;
     }
 
     .badge-acess {
@@ -123,29 +123,29 @@
       font-style:italic;
     }
 
-    /* ===== LEGENDA ===== */
+    /* legenda fixa */
     .legend {
-      position: absolute;
-      z-index: 1250;
-      left: 10px;
-      bottom: 10px;
-      background: rgba(255,255,255,0.96);
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 10px;
-      box-shadow: 0 16px 32px rgba(0,0,0,.18);
-      padding: 10px 12px;
-      font-size: 12px;
-      line-height: 1.4;
-      color:#1e293b;
-      min-width: 160px;
-      max-width: 200px;
+      position:absolute;
+      z-index:1150;
+      left:10px;
+      bottom:10px;
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(0,0,0,.07);
+      border-radius:10px;
+      box-shadow:0 12px 32px rgba(0,0,0,.15);
+      font-size:12px;
+      line-height:1.4;
+      padding:10px 12px;
+      color:#0f172a;
+      min-width:150px;
+      max-width:200px;
     }
 
     .legend-title {
+      font-weight:700;
       font-size:12px;
-      font-weight:600;
+      margin-bottom:6px;
       color:#0f172a;
-      margin-bottom:8px;
     }
 
     .legend-row {
@@ -153,9 +153,7 @@
       align-items:center;
       gap:8px;
       margin-bottom:6px;
-      line-height:1.4;
       color:#1e293b;
-      font-size:12px;
       font-weight:500;
     }
 
@@ -163,7 +161,7 @@
       width:12px;
       height:12px;
       border-radius:4px;
-      box-shadow:0 0 0 1px rgba(0,0,0,.15);
+      border:1px solid rgba(0,0,0,.2);
       flex-shrink:0;
     }
 
@@ -178,10 +176,10 @@
       }
 
       .legend {
+        position: absolute;
         left: 10px;
         bottom: auto;
-        top: 10px;
-        margin-top: 60px;
+        top: 80px;
       }
     }
   </style>
@@ -189,11 +187,11 @@
 <body>
 
   <!-- mapa -->
-  <div id="map" aria-label="Mapa do bairro América"></div>
+  <div id="map" aria-label="Mapa do bairro Itaum"></div>
 
   <!-- barra superior -->
   <div class="topbar">
-    <div class="bairroNome">Bairro: América</div>
+    <div class="bairroNome">Bairro: Itaum</div>
     <button class="btn" onclick="window.location.href='index.html'">Voltar</button>
     <button class="btn" id="resetViewBtn">Resetar visão</button>
   </div>
@@ -204,14 +202,9 @@
     <div class="info-hint">Veja os detalhes do serviço.</div>
   </div>
 
-  <!-- legenda fixa -->
+  <!-- legenda -->
   <div class="legend" id="legendBox">
     <div class="legend-title">Tipos de serviço</div>
-
-    <div class="legend-row">
-      <div class="legend-swatch" style="background:#2563eb;"></div>
-      <div>Saúde</div>
-    </div>
 
     <div class="legend-row">
       <div class="legend-swatch" style="background:#22c55e;"></div>
@@ -219,13 +212,18 @@
     </div>
 
     <div class="legend-row">
-      <div class="legend-swatch" style="background:#8b5cf6;"></div>
-      <div>Cultura / Esporte</div>
+      <div class="legend-swatch" style="background:#f97316;"></div>
+      <div>Educação</div>
     </div>
 
     <div class="legend-row">
-      <div class="legend-swatch" style="background:#f97316;"></div>
-      <div>Educação</div>
+      <div class="legend-swatch" style="background:#2563eb;"></div>
+      <div>Saúde</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-swatch" style="background:#8b5cf6;"></div>
+      <div>Cultura / Esporte</div>
     </div>
 
     <div class="legend-row">
@@ -235,104 +233,56 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-
   <script>
-    // ============================
-    // 1. GeoJSON oficial dos bairros
-    // ============================
+    // ========= 1. Polígono oficial do bairro =========
     const BAIRROS_URL =
       "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
 
-    // nome normalizado do bairro
-    const NOME_BAIRRO_ALVO = "america";
+    // nome alvo (sem acento/minúsculo)
+    const NOME_BAIRRO_ALVO = "itaum";
 
-    // Paleta de cores por categoria (tem que bater com a legenda!)
-    const SERVICE_COLORS = {
-      "saude":            "#2563eb",  // Saúde
-      "assistencia":      "#22c55e",  // Assistência Social
-      "cultura-esporte":  "#8b5cf6",  // Cultura / Esporte
-      "educacao":         "#f97316",  // Educação
-      "outros":           "#6b7280"   // Outros
-    };
-
-    // ============================
-    // 2. Serviços do bairro América
-    // ============================
+    // ========= 2. Serviços do bairro Itaum =========
+    // Cores por tipo:
+    // Assistência Social -> #22c55e
+    // Educação           -> #f97316
+    // (Saúde azul #2563eb, se entrar depois)
     const servicesBairro = [
       {
-        categoria: "assistencia",
         tipo: "Assistência Social",
-        nomeServico: "Centro-Dia da APAE",
-        endereco: "Rua Almirante Barroso, 305",
-        telefone: "(47) 3431-7400",
-        horario: "Atendimento em período integral ou parcial",
-        responsavel: "",
-        observacoes:
-          "Cuidados, apoio e atividades para pessoas com deficiência em período integral ou parcial.",
-        acessibilidade: "Sim",
-        lat: -26.2822263,
-        lng: -48.8491848
-      },
-      {
-        categoria: "assistencia",
-        tipo: "Assistência Social",
-        nomeServico: "SAS.CDH.PCD - Área de Assessoria à Acessibilidade da Pessoa com Deficiência",
-        endereco: "Rua Max Colin, 1480 (fundos)",
-        telefone: "(47) 3433-0819",
-        horario: "Seg-Sex: 08h às 17h",
-        responsavel: "Patrícia Medeiros",
-        observacoes:
-          "Articulação e apoio de políticas públicas e ações para promoção e defesa da acessibilidade da pessoa com deficiência e demais direitos.",
-        acessibilidade: "Sim",
-        lat: -26.2941877,
-        lng: -48.8576263
-      },
-      {
-        categoria: "assistencia",
-        tipo: "Assistência Social",
-        nomeServico: "CREAS 3 – Serviço de Proteção Social Especial para Pessoas com Deficiência, Idosas e suas Famílias",
-        endereco: "Rua Max Colin, 1480",
+        nomeServico: "Centro Social Urbano Itaum",
+        endereco: "R. Arlindo Pereira de Macedo, 225 - Itaum, Joinville - SC, 89210-173",
         telefone: "",
-        horario: "",
+        horario: "Seg-qui 08:30–11:30 / 14:00–17:00; Sex 08:30–11:30",
         responsavel: "",
-        observacoes:
-          "Atendimento especializado para situações de violação de direitos, suporte a pessoas com deficiência, idosas e suas famílias.",
+        observacoes: "Centro de ensino, convivência e entretenimento.",
         acessibilidade: "Sim",
-        lat: -26.2941877,
-        lng: -48.8576263
+        cor: "#22c55e"
       },
       {
-        categoria: "saude",
-        tipo: "Saúde",
-        nomeServico: "Instituto TEA",
-        endereco: "Rua Blumenau, 1301",
-        telefone: "(47) 98891-3586",
-        horario: "Seg-Sex: 08h às 18h",
+        tipo: "Assistência Social",
+        nomeServico: "CREAS Sul - PAEFI (Secretaria de Assistência Social)",
+        endereco: "R. Ver. Alfredo Zimmermann, 174 - Itaum, Joinville - SC, 89210-000",
+        telefone: "(47) 3463-3660",
+        horario: "Seg-sex 07:00–19:00",
         responsavel: "",
-        observacoes:
-          "Clínica multidisciplinar que promove a intervenção psicológica com pessoas com TEA.",
+        observacoes: "Assistência social, identificação de vulnerabilidades, convivência e busca por direitos.",
         acessibilidade: "Sim",
-        lat: -26.2897269,
-        lng: -48.849889
+        cor: "#22c55e"
       },
       {
-        categoria: "saude",
-        tipo: "Saúde / Hospital",
-        nomeServico: "Hospital Dona Helena",
-        endereco: "Rua Blumenau, 123",
-        telefone: "(47) 3451-3333",
-        horario: "24 horas",
-        responsavel: "Udo Dohler",
-        observacoes: "Centro hospitalar.",
+        tipo: "Educação",
+        nomeServico: "Escola Municipal Monsenhor Sebastião Scarzello",
+        endereco: "R. Florianópolis, 1370 - Itaum, Joinville - SC, 89210-795",
+        telefone: "(47) 3463-6629",
+        horario: "Seg-sex 07:30–17:30",
+        responsavel: "",
+        observacoes: "Centro de educação.",
         acessibilidade: "Sim",
-        lat: -26.29906,
-        lng: -48.85107
+        cor: "#f97316"
       }
     ];
 
-    // ============================
-    // 3. Funções utilitárias
-    // ============================
+    // ========= 3. Helpers =========
     function escapeHTML(str){
       return String(str)
         .replace(/&/g,'&amp;')
@@ -362,16 +312,19 @@
         <div class="info-value">${escapeHTML(svc.endereco)}</div>
 
         ${svc.telefone ? `
-        <div class="info-label">Telefone</div>
-        <div class="info-value">${escapeHTML(svc.telefone)}</div>` : ""}
+          <div class="info-label">Telefone</div>
+          <div class="info-value">${escapeHTML(svc.telefone)}</div>
+        ` : ""}
 
         ${svc.horario ? `
-        <div class="info-label">Horário de Atendimento</div>
-        <div class="info-value">${escapeHTML(svc.horario)}</div>` : ""}
+          <div class="info-label">Horário de Atendimento</div>
+          <div class="info-value">${escapeHTML(svc.horario)}</div>
+        ` : ""}
 
         ${svc.responsavel ? `
-        <div class="info-label">Responsável</div>
-        <div class="info-value">${escapeHTML(svc.responsavel)}</div>` : ""}
+          <div class="info-label">Responsável</div>
+          <div class="info-value">${escapeHTML(svc.responsavel)}</div>
+        ` : ""}
 
         <div class="info-label">Descrição / Observações</div>
         <div class="info-value">${escapeHTML(svc.observacoes)}</div>
@@ -388,32 +341,32 @@
       `;
     }
 
-    function makePinIcon(colorHex){
+    // cria um pin SVG na cor do serviço
+    function makePinIcon(hexColor){
       return L.icon({
         iconUrl:
           'data:image/svg+xml;utf8,' +
           encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
-              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z"
-                fill="${colorHex}"/>
+              <path d="M16 2C10.2 2 5.5 6.7 5.5 12.5c0 2.9 1.2 5.1 2.8 7.3 1.7 2.1 3.8 4.1 5.5 6.2.8 1 1.6 2 2.2 3 .6-1 1.4-2 2.2-3 1.7-2.1 3.8-4.1 5.5-6.2 1.6-2.2 2.8-4.4 2.8-7.3C26.5 6.7 21.8 2 16 2z" fill="${hexColor}"/>
               <circle cx="16" cy="12" r="4.5" fill="white"/>
             </svg>
           `),
-        iconSize: [32, 32],
-        iconAnchor: [16, 32]
+        iconSize: [32,32],
+        iconAnchor: [16,32]
       });
     }
 
-    // ============================
-    // 4. Mapa
-    // ============================
+    // ========= 4. Mapa =========
     document.addEventListener('DOMContentLoaded', () => {
       const map = L.map('map');
       let combinedBounds = null;
+      let bairroCenter = null;
 
       fetch(BAIRROS_URL)
         .then(r => r.json())
         .then(gj => {
+          // filtra só o Itaum
           const onlyThisBairro = {
             type: "FeatureCollection",
             features: (gj.features || []).filter(f => {
@@ -424,47 +377,68 @@
             })
           };
 
-          if (!onlyThisBairro.features.length){
-            alert("Bairro não encontrado no mapa oficial.");
-            return;
+          if (onlyThisBairro.features.length){
+            // desenha o polígono oficial do bairro
+            const bairroLayer = L.geoJSON(onlyThisBairro, {
+              style: {
+                color: "#1e293b",
+                weight: 3,
+                fillColor: "#60a5fa",
+                fillOpacity: 0.25
+              }
+            }).addTo(map);
+
+            combinedBounds = bairroLayer.getBounds();
+            bairroCenter = combinedBounds.getCenter();
+          } else {
+            // fallback caso não encontre
+            bairroCenter = L.latLng(-26.32, -48.84);
+            combinedBounds = L.latLngBounds(bairroCenter, bairroCenter);
           }
 
-          const bairroLayer = L.geoJSON(onlyThisBairro, {
-            style: {
-              color: "#1e293b",
-              weight: 3,
-              fillColor: "#60a5fa",
-              fillOpacity: 0.25
-            }
-          }).addTo(map);
+          // offsets pra não empilhar tudo num ponto só
+          const offsets = [
+            {dx:  0.0010, dy:  0.0010},
+            {dx: -0.0007, dy: -0.0004},
+            {dx:  0.0004, dy: -0.0010}
+          ];
 
-          combinedBounds = bairroLayer.getBounds();
+          servicesBairro.forEach((svc, i) => {
+            const off = offsets[i % offsets.length];
+            const lat = bairroCenter.lat + off.dy;
+            const lng = bairroCenter.lng + off.dx;
 
-          servicesBairro.forEach(svc => {
-            const color = SERVICE_COLORS[svc.categoria] || SERVICE_COLORS["outros"];
-            const ll = L.latLng(svc.lat, svc.lng);
-
-            const marker = L.marker(ll, {
-              icon: makePinIcon(color)
+            const marker = L.marker([lat, lng], {
+              icon: makePinIcon(svc.cor || "#6b7280")
             }).addTo(map);
 
             marker.on('mouseover', () => renderInfoPanel(svc));
             marker.on('mouseout', resetInfoPanel);
 
-            combinedBounds.extend(ll);
+            combinedBounds.extend([lat, lng]);
           });
 
-          map.fitBounds(combinedBounds, { padding:[30,30] });
+          // enquadrar tudo
+          if (combinedBounds && combinedBounds.isValid()){
+            map.fitBounds(combinedBounds, { padding:[30,30] });
+          } else {
+            map.setView(bairroCenter, 15);
+          }
 
+          // botão "Resetar visão"
           document.getElementById('resetViewBtn').addEventListener('click', () => {
             if (combinedBounds && combinedBounds.isValid()) {
               map.fitBounds(combinedBounds, { padding:[30,30] });
+            } else {
+              map.setView(bairroCenter, 15);
             }
           });
         })
         .catch(err => {
           console.error("Erro carregando bairro:", err);
           alert("Erro ao carregar dados do bairro.");
+          const fallbackCenter = [-26.32, -48.84];
+          map.setView(fallbackCenter, 14);
         });
     });
   </script>
