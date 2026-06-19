@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>População Negra Proporcional - Joinville/SC</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: #fff;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #0f172a;
+        }
+
+        #capture {
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        #map {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+        }
+
+        .titulo-mapa {
+            position: absolute;
+            z-index: 1000;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.96);
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.35;
+            max-width: 760px;
+        }
+
+        .titulo-mapa strong {
+            font-size: 16px;
+        }
+
+        .download-btn {
+            position: absolute;
+            z-index: 1000;
+            top: 18px;
+            right: 18px;
+            padding: 8px 12px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+        }
+
+        .download-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .legend {
+            position: absolute;
+            z-index: 1000;
+            left: 18px;
+            bottom: 18px;
+            background: rgba(255, 255, 255, 0.96);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+            font-size: 13px;
+            min-width: 210px;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .legend-swatch {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, .25);
+        }
+
+        .bairro-tooltip-nome {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, .18);
+            color: #0f172a;
+            padding: 7px 9px;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .bairro-label {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            font-size: 11px;
+            font-weight: 800;
+            color: #111;
+            text-align: center;
+            white-space: nowrap;
+            text-shadow:
+                -1px -1px 0 #fff,
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                1px 1px 0 #fff;
+            pointer-events: none;
+        }
+
+        body.exportando .download-btn {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="capture">
+        <div id="map"></div>
+
+        <div class="titulo-mapa">
+            <strong>Distribuição proporcional da população negra</strong><br>
+            Bairros de Joinville/SC – Censo Demográfico 2022<br>
+            População negra = preta + parda
+        </div>
+
+
+
+        <div class="legend">
+            <div class="legend-title">População negra (%)</div>
+            <div class="legend-item">
+                <div class="legend-swatch" style="background:#F3E5D0;"></div>Até 15%
+            </div>
+            <div class="legend-item">
+                <div class="legend-swatch" style="background:#DDB892;"></div>15–20%
+            </div>
+            <div class="legend-item">
+                <div class="legend-swatch" style="background:#B08968;"></div>20–25%
+            </div>
+            <div class="legend-item">
+                <div class="legend-swatch" style="background:#7F5539;"></div>25–30%
+            </div>
+            <div class="legend-item">
+                <div class="legend-swatch" style="background:#4A2C17;"></div>Acima de 30%
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <script>
+        function normalizeName(str) {
+            return String(str || '')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .toLowerCase();
+        }
+
+        const NEGRA_PCT = {
+            "jardim paraiso": 39.35,
+            "ulysses guimaraes": 38.18,
+            "vila cubatao": 33.96,
+            "paranaguamirim": 33.29,
+            "comasa": 31.31,
+            "itinga": 28.72,
+            "fatima": 28.67,
+            "morro do meio": 28.54,
+            "jardim iririu": 28.26,
+            "jarivatuba": 27.71,
+            "jardim sofia": 27.39,
+            "zona industrial 1": 26.98,
+            "adhemar garcia": 26.84,
+            "aventureiro": 26.24,
+            "boa vista": 26.18,
+            "espinheiros": 25.63,
+            "rio bonito": 24.81,
+            "parque guarani": 24.76,
+            "petropolis": 24.69,
+            "joao costa": 24.08,
+            "nova brasilia": 23.15,
+            "vila nova": 22.81,
+            "boehmerwald": 22.55,
+            "iririu": 20.35,
+            "itaum": 20.11,
+            "profipo": 19.69,
+            "costa e silva": 19.58,
+            "floresta": 19.56,
+            "santa catarina": 18.93,
+            "guanabara": 18.67,
+            "dona francisca": 18.17,
+            "bom retiro": 16.91,
+            "bucarein": 16.32,
+            "santo antonio": 15.76,
+            "pirabeiraba": 15.60,
+            "saguacu": 13.45,
+            "sao marcos": 12.25,
+            "gloria": 11.01,
+            "anita garibaldi": 10.69,
+            "centro": 9.56,
+            "america": 8.92,
+            "atiradores": 7.57,
+            "zona industrial 2": 6.82
+        };
+
+        const ROTULAR = new Set([
+            "jardim paraiso",
+            "ulysses guimaraes",
+            "vila cubatao",
+            "paranaguamirim",
+            "comasa",
+            "itinga",
+            "fatima",
+            "morro do meio",
+            "jardim iririu",
+            "jarivatuba",
+            "aventureiro",
+            "centro",
+            "america",
+            "gloria"
+        ]);
+
+        function getColor(pct) {
+            if (pct > 30) return "#4A2C17";
+            if (pct > 25) return "#7F5539";
+            if (pct > 20) return "#B08968";
+            if (pct > 15) return "#DDB892";
+            return "#F3E5D0";
+        }
+
+        const BAIRROS_URL =
+            "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson";
+
+        const LIMITE_MUNICIPAL_URL =
+            "https://geo.joinville.sc.gov.br/server/rest/services/Hosted/Limite_Municipal/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson";
+
+        const map = L.map("map", {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([-26.3045, -48.8487], 11);
+
+        let limiteLayer;
+        let bairrosLayer;
+
+        Promise.all([
+            fetch(LIMITE_MUNICIPAL_URL).then(r => r.json()),
+            fetch(BAIRROS_URL).then(r => r.json())
+        ])
+            .then(([limiteGJ, bairrosGJ]) => {
+
+                limiteLayer = L.geoJSON(limiteGJ, {
+                    style: {
+                        color: "#111111",
+                        weight: 2.2,
+                        fillColor: "#ffffff",
+                        fillOpacity: 0,
+                        dashArray: "6,4"
+                    },
+                    interactive: false
+                }).addTo(map);
+
+                bairrosLayer = L.geoJSON(bairrosGJ, {
+                    style: feature => {
+                        const rawName = feature.properties?.nome_bairr || feature.properties?.NOME || feature.properties?.name || "Bairro";
+                        const norm = normalizeName(rawName);
+                        const pct = NEGRA_PCT[norm] ?? 0;
+
+                        return {
+                            color: "#3f3f3f",
+                            weight: 1,
+                            fillColor: getColor(pct),
+                            fillOpacity: 0.88
+                        };
+                    },
+
+                    onEachFeature: (feature, layer) => {
+                        const rawName = feature.properties?.nome_bairr || feature.properties?.NOME || feature.properties?.name || "Bairro";
+                        const bairroName = String(rawName);
+                        const norm = normalizeName(bairroName);
+                        const pct = NEGRA_PCT[norm];
+
+                        layer.bindTooltip(
+                            `<div class="bairro-tooltip-nome">
+              <strong>${bairroName}</strong><br>
+              População negra: ${pct !== undefined ? pct.toFixed(2) + "%" : "sem dado"}
+            </div>`,
+                            {
+                                sticky: true,
+                                permanent: false,
+                                direction: "center",
+                                className: "",
+                                opacity: 1
+                            }
+                        );
+
+                        if (ROTULAR.has(norm)) {
+                            const center = layer.getBounds().getCenter();
+
+                            L.marker(center, {
+                                interactive: false,
+                                icon: L.divIcon({
+                                    className: "bairro-label",
+                                    html: bairroName,
+                                    iconSize: [130, 20],
+                                    iconAnchor: [65, 10]
+                                })
+                            }).addTo(map);
+                        }
+                    }
+                }).addTo(map);
+
+                const bounds = bairrosLayer.getBounds();
+
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, {
+                        paddingTopLeft: [50, 120],
+                        paddingBottomRight: [50, 50],
+                        animate: false
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Erro ao carregar camadas:", err);
+                alert("Erro ao carregar os dados geográficos de Joinville.");
+            });
+
+        function salvarPNG() {
+            document.body.classList.add("exportando");
+
+            const bounds = bairrosLayer.getBounds();
+
+            map.fitBounds(bounds, {
+                paddingTopLeft: [70, 125],
+                paddingBottomRight: [70, 70],
+                animate: false
+            });
+
+            setTimeout(() => {
+                html2canvas(document.getElementById("capture"), {
+                    backgroundColor: "#ffffff",
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: document.documentElement.clientWidth,
+                    windowHeight: document.documentElement.clientHeight
+                }).then(canvas => {
+                    const link = document.createElement("a");
+                    link.download = "mapa-populacao-negra-joinville-2022.png";
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+
+                    document.body.classList.remove("exportando");
+                }).catch(err => {
+                    console.error("Erro ao salvar PNG:", err);
+                    document.body.classList.remove("exportando");
+                });
+            }, 900);
+        }
+    </script>
+</body>
+
+</html>
