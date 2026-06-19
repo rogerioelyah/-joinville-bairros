@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mapa de Bairros - Joinville</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: #fff;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #0f172a;
+        }
+
+        #map {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            outline: none;
+        }
+
+        .toolbar {
+            position: absolute;
+            z-index: 1000;
+            left: 12px;
+            top: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .15);
+            font-size: 13px;
+            line-height: 1.3;
+            color: #0f172a;
+            max-width: calc(100% - 24px);
+        }
+
+        .bairro-tooltip-nome {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, .2);
+            color: #0f172a;
+            padding: 6px 8px;
+            font-size: 12px;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+
+        .leaflet-interactive {
+            cursor: pointer;
+        }
+
+        /* legenda visual das zonas */
+        .legend {
+            position: absolute;
+            z-index: 1000;
+            left: 12px;
+            bottom: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .15);
+            font-size: 12px;
+            line-height: 1.4;
+            color: #0f172a;
+            min-width: 150px;
+        }
+
+        .legend-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            line-height: 1.3;
+            color: #1e293b;
+        }
+
+        .legend-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map" aria-label="Mapa dos bairros de Joinville" tabindex="0"></div>
+
+    <div class="toolbar">
+        Clique em um bairro para abrir a página dele.
+    </div>
+
+    <!-- legenda das zonas -->
+    <div class="legend" id="legendBox">
+        <div class="legend-title">Zonas</div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#fbcfe8;"></div>Zona Oeste
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#93c5fd;"></div>Zona Norte
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#86efac;"></div>Zona Sul
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#fde68a;"></div>Zona Leste
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#c7c7c7;"></div>Zona Central
+        </div>
+        <div class="legend-item">
+            <div class="legend-swatch" style="background:#201e1e;"></div>Bairro sem serviço identificado
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // -------------------------
+        // 1. Normalizador de nome (sem acento, minúsculo)
+        // -------------------------
+        function normalizeName(str) {
+            if (!str) return '';
+            return String(str)
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .toLowerCase();
+        }
+
+        // -------------------------
+        // 2. Geração do nome de arquivo HTML pra abrir no clique
+        // -------------------------
+        function normalizeFileName(str) {
+            return String(str)
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-zA-Z0-9\-]/g, '')
+                .toLowerCase();
+        }
+
+        const BAIRRO_PAGE_OVERRIDE = {
+            "vila nova": "vila-nova",
+            "nova brasilia": "nova-brasilia",
+            "morro do meio": "morro-do-meio",
+            "sao marcos": "sao-marcos",
+            "america": "america",
+            "atiradores": "atiradores",
+            "centro": "centro",
+            "gloria": "gloria",
+            "saguacu": "saguacu",
+            "dona francisca": "dona-francisca",
+            "zona industrial tupy": "zona-industrial-tupy"
+        };
+
+        function getBairroPageName(rawName) {
+            const norm = normalizeName(rawName);
+            for (const k in BAIRRO_PAGE_OVERRIDE) {
+                if (norm.startsWith(k)) {
+                    return BAIRRO_PAGE_OVERRIDE[k];
+                }
+            }
+            return normalizeFileName(rawName);
+        }
+
+        // -------------------------
+        // 3. Mapeamento Bairro -> Zona
+        // -------------------------
+        const ZONA_POR_BAIRRO = {
+            // Zona Oeste
+            "vila nova": "zona_oeste",
+            "nova brasilia": "zona_oeste",
+            "morro do meio": "zona_oeste",
+            "sao marcos": "zona_oeste",
+            "são marcos": "zona_oeste",
+
+            // Zona Centro
+            "america": "zona_centro",
+            "américa": "zona_centro",
+            "atiradores": "zona_centro",
+            "centro": "zona_centro",
+            "gloria": "zona_centro",
+            "glória": "zona_centro",
+            "saguacu": "zona_centro",
+            "saguaçu": "zona_centro",
+            "anita garibaldi": "zona_centro",
+            "bucarein": "zona_centro",
+
+            // Zona Leste
+            "aventureiro": "zona_leste",
+            "comasa": "zona_leste",
+            "iririu": "zona_leste",
+            "iririú": "zona_leste",
+            "jardim iririu": "zona_leste",
+            "jardim iririú": "zona_leste",
+            "jardim paraiso": "zona_leste",
+            "jardim paraíso": "zona_leste",
+            "jardim sofia": "zona_leste",
+            "vila cubatao": "zona_leste",
+            "vila cubatão": "zona_leste",
+            "boa vista": "zona_leste",
+            "espinheiros": "zona_leste",
+
+            // Zona Norte
+            "pirabeiraba": "zona_norte",
+            "costa e silva": "zona_norte",
+            "rio bonito": "zona_norte",
+            "zona industrial norte": "zona_norte",
+            "santo antonio": "zona_norte",
+            "santo antônio": "zona_norte",
+            "bom retiro": "zona_norte",
+
+            // Zona Sul
+            "adhemar garcia": "zona_sul",
+            "boehmerwald": "zona_sul",
+            "fatima": "zona_sul",
+            "fátima": "zona_sul",
+            "floresta": "zona_sul",
+            "guanabara": "zona_sul",
+            "itaum": "zona_sul",
+            "itinga": "zona_sul",
+            "jarivatuba": "zona_sul",
+            "joao costa": "zona_sul",
+            "joão costa": "zona_sul",
+            "paranaguamirim": "zona_sul",
+            "parque guarani": "zona_sul",
+            "petropolis": "zona_sul",
+            "petrópolis": "zona_sul",
+            "profipo": "zona_sul",
+            "santa catarina": "zona_sul",
+            "ulysses guimaraes": "zona_sul",
+            "ulisses guimaraes": "zona_sul",
+
+            // Sem serviço identificado
+            "dona francisca": "sem_servico",
+            "zona industrial tupy": "sem_servico"
+        };
+
+        // -------------------------
+        // 4. Paleta de cor por zona
+        // -------------------------
+        const CORES_POR_ZONA = {
+            "zona_norte": { fill: "#93c5fd", stroke: "#1e3a8a" },  // azul
+            "zona_sul": { fill: "#86efac", stroke: "#065f46" },  // verde
+            "zona_leste": { fill: "#fde68a", stroke: "#92400e" },  // amarelo
+            "zona_oeste": { fill: "#fbcfe8", stroke: "#9d174d" },  // rosa
+            "zona_centro": { fill: "#c7c7c7", stroke: "#374151" },  // cinza claro
+            "sem_servico": { fill: "#201e1e", stroke: "#000000" }   // preto (sem serviço identificado)
+        };
+
+        const COR_FALLBACK = { fill: "#ddd", stroke: "#555" };
+
+        // -------------------------
+        // 5. Fonte oficial dos bairros
+        // -------------------------
+        const BAIRROS_URL =
+            'https://geo.joinville.sc.gov.br/server/rest/services/Hosted/BAIRROS/FeatureServer/3/query?where=1%3D1&outFields=*&f=geojson';
+
+        let map;
+        let bairrosLayer;
+        let allBounds;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            map = L.map('map', { zoomControl: true });
+            map.setView([-26.3045, -48.8487], 13);
+
+            fetch(BAIRROS_URL)
+                .then(r => r.json())
+                .then(gj => {
+
+                    bairrosLayer = L.geoJSON(gj, {
+                        style: function (feature) {
+                            const props = feature.properties || {};
+                            const rawName = props.nome_bairr || props.NOME || props.name || 'Bairro';
+                            const normName = normalizeName(rawName);
+
+                            const zona = ZONA_POR_BAIRRO[normName];
+                            const paleta = zona && CORES_POR_ZONA[zona] ? CORES_POR_ZONA[zona] : COR_FALLBACK;
+
+                            return {
+                                color: paleta.stroke,
+                                weight: 1.8,
+                                fillColor: paleta.fill,
+                                fillOpacity: 0.35
+                            };
+                        },
+
+                        onEachFeature: function (feature, layer) {
+                            const props = feature.properties || {};
+                            const rawName = props.nome_bairr || props.NOME || props.name || 'Bairro';
+                            const bairroName = String(rawName);
+
+                            layer.bindTooltip(
+                                '<div class="bairro-tooltip-nome">' + bairroName + '</div>',
+                                {
+                                    sticky: true,
+                                    permanent: false,
+                                    direction: 'center',
+                                    className: '',
+                                    opacity: 1
+                                }
+                            );
+
+                            layer.on('mouseover', () => {
+                                layer.openTooltip && layer.openTooltip();
+                            });
+
+                            layer.on('mouseout', () => {
+                                layer.closeTooltip && layer.closeTooltip();
+                            });
+
+                            layer.on('click', () => {
+                                const pageBase = getBairroPageName(bairroName);
+                                const target = pageBase + ".html";
+                                window.location.href = target;
+                            });
+                        }
+                    }).addTo(map);
+
+                    allBounds = bairrosLayer.getBounds();
+                    if (allBounds && allBounds.isValid && allBounds.isValid()) {
+                        map.fitBounds(allBounds, { padding: [20, 20] });
+                    }
+                })
+                .catch(err => {
+                    console.error('Falha ao carregar bairros:', err);
+                    alert('Erro ao carregar os bairros de Joinville.');
+                });
+        });
+    </script>
+</body>
+
+</html>
